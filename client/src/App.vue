@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import BaseGame from "./components/baseGame.vue";
 
 </script>
 
 <template>
-  <h1>Settlea</h1>
+  <BaseGame />
 </template>
 
 
