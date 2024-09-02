@@ -1,7 +1,7 @@
 <h1 align="center" style="border-bottom: none">
             <img src="https://i.ibb.co/VvT1KsK/S.png" width="40" />
  <div>
- <a href="#"> Settlea </a>
+ <a href="#"> Settlea (WIP) </a>
 
   </div>
  </h1>
@@ -10,8 +10,7 @@
 <p align="center"> Settlers of Catan Free Open Source Alternative </p>
 
 <p align="center">
-<b> Tech Stack </b>
-Fron
+<b> Tech Stack: </b> Vue.js, Pixi.js, TypeScript for the frontend, and Python (FastAPI) for the backend apis and websocket serving.
 
 </p>
 
@@ -25,12 +24,8 @@ Fron
 
 ![Mock](https://i.ibb.co/wJbp6sq/Group-40.png)
 
-<img src="https://static.scarf.sh/a.png?x-pxid=c12a77cc-855e-4602-8a0f-614b2d0da56a" />
 
-# Join Our Community
-
-<a href="https://discord.gg/5RgZmkW" target="_blank">
-<img src="https://discordapp.com/api/guilds/1270457293070143558/widget.png?style=banner3" alt="">
-
+# Join Our Discord
+TBD
 
 </a>
