@@ -1,9 +1,10 @@
 <template>
-  <div class="stage" @click="pop"></div>
+  <div class="baseGame"></div>
 </template>
 
 <script lang="ts">
-import { Application, Assets, Sprite } from "pixi.js";
+import { Application } from "pixi.js";
+import { init } from "../scripts/game";
 
 export default {
   name: "BaseGame",
@@ -22,35 +23,7 @@ export default {
     };
   },
   async mounted() {
-    this.app = new Application();
-
-    await this.app.init({
-      background: "#1099bb",
-      width: 1265,
-      height: 650,
-    });
-
-    this.$el.appendChild(this.app.canvas);
-
-    const texture = await Assets.load("https://pixijs.com/assets/bunny.png");
-
-    const bunny = new Sprite(texture);
-
-    bunny.anchor.set(0.5);
-
-    bunny.x = this.app.screen.width / 2;
-    bunny.y = this.app.screen.height / 2;
-
-    this.app.stage.addChild(bunny);
-
-    this.app.ticker.add((time) => {
-      bunny.rotation += 0.1 * time.deltaTime;
-    });
-  },
-  methods: {
-    async pop() {
-      console.log("pop");
-    },
+    await init(this);
   },
 };
 </script>
