@@ -17,6 +17,8 @@ import {
   polygonCorners,
 } from "../library/Hex";
 
+import type { PortData } from "../library/types";
+
 const width = 1200;
 const height = 650;
 
@@ -38,7 +40,7 @@ export async function init(ctx: any): Promise<void> {
   const text = new BitmapText({
     text: "?",
     style: {
-      fontFamily: "Desyrel",
+      fontFamily: "Rubik",
       fontSize: 55,
       align: "left",
     },
@@ -50,8 +52,6 @@ export async function init(ctx: any): Promise<void> {
   app.stage.addChild(text);
 
   app.stage.addEventListener("pointermove", (e) => {
-    // round e.global.x and e.global.y to 2 decimal places
-    // and display them in the text
     text.text = `${Math.round(e.global.x * 100) / 100}, ${
       Math.round(e.global.y * 100) / 100
     }`;
@@ -80,53 +80,49 @@ async function setupMap(app: Application, container: Container): Promise<void> {
 
   app.stage.addChild(container);
 
-  Assets.load("fonts");
-
-  // const text = new Text({
-  //   text: "3:1",
-  //   style: {
-  //     fontFamily: "ChaChicle",
-  //     fontSize: 50,
-  //     align: "center",
-  //   },
-  // });
-
-  // text.x = width / 2;
-  // text.y = height / 2;
-
-  // container.addChild(text);
-
-  // Add font files to the bundle
-  Assets.addBundle("fonts", [
-    {
-      alias: "Dotrice Regular",
-      src: "https://pixijs.com/assets/webfont-loader/Dotrice-Regular.woff",
+  // Define the structure for all port mappings
+  const portMappings: Record<string, PortData> = {
+    // 0: generic, 1: wood, 2: brick, 3: sheep, 4: ore
+    port1: {
+      exchangeRate: {
+        text: "3:1",
+        coord: [770, 490],
+      },
+      portType: {
+        text: "?", // 0 represents generic in this context
+        coord: [775, 465],
+      },
     },
-    {
-      alias: "Crosterian",
-      src: "https://pixijs.com/assets/webfont-loader/Crosterian.woff2",
-    },
-  ]);
+    // Add other ports similarly...
+  };
 
-  // Load the font bundle
-  await Assets.loadBundle("fonts");
-
-  const text3 = new Text({
-    text: "Dotrice Regular.woff",
-    style: { fontFamily: "Dotrice Regular", fontSize: 50 },
-  });
-  const text4 = new Text({
-    text: "Crosterian.woff2",
-    style: { fontFamily: "Crosterian", fontSize: 50 },
-  });
-
-  text3.y = 300;
-  text4.y = 450;
-
-  app.stage.addChild(text3);
-  app.stage.addChild(text4);
+  for (const portName in portMappings) {
+    addPorts(portMappings[portName], container);
+  }
 }
 
+function addPorts(portData: PortData, container: Container): void {
+  const ratesText = new Text({
+    text: portData.exchangeRate.text,
+    style: { fontFamily: "Rubik" },
+  });
+
+  const typeText = new Text({
+    text: portData.portType.text,
+    style: { fontFamily: "Rubik", fontWeight: "bold" },
+  });
+
+  ratesText.x = portData.exchangeRate.coord[0];
+  ratesText.y = portData.exchangeRate.coord[1];
+  typeText.x = portData.portType.coord[0];
+  typeText.y = portData.portType.coord[1];
+
+  typeText.style.fontSize = 25;
+  ratesText.style.fontSize = 20;
+
+  container.addChild(ratesText);
+  container.addChild(typeText);
+}
 function setupBackground(texture: Texture, container: Container): void {
   texture.source.scaleMode = "nearest";
   const background = new Sprite(texture);
