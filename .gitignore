@@ -165,3 +165,4 @@ out
 
 # Ignore Mac DS_Store files
 .DS_Store
+tests/lab.ipynb
