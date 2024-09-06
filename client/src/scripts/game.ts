@@ -81,11 +81,11 @@ async function setupMap(app: Application, container: Container): Promise<void> {
 
 async function loadAllAssets() {
   Assets.add({ alias: "background", src: "../../assets/temp_background.png" });
-  Assets.add({ alias: "wood", src: "../../assets/icons/wood.svg" });
-  Assets.add({ alias: "brick", src: "../../assets/icons/brick.svg" });
-  Assets.add({ alias: "sheep", src: "../../assets/icons/sheep.svg" });
-  Assets.add({ alias: "wheat", src: "../../assets/icons/wheat.svg" });
-  Assets.add({ alias: "ore", src: "../../assets/icons/rock.svg" });
+  Assets.add({ alias: "wood", src: "../../assets/icons/wood.png" });
+  Assets.add({ alias: "brick", src: "../../assets/icons/brick.png" });
+  Assets.add({ alias: "sheep", src: "../../assets/icons/sheep.png" });
+  Assets.add({ alias: "wheat", src: "../../assets/icons/wheat.png" });
+  Assets.add({ alias: "ore", src: "../../assets/icons/rock.png" });
 
   const assets = Assets.load([
     "wood",
@@ -257,7 +257,7 @@ async function generateMap(
       portType: {
         text: Sprite.from(textures.wood),
         coord: [945, 205],
-        size: 0.125,
+        size: 0.039,
       },
     },
 
@@ -304,7 +304,7 @@ async function generateMap(
       portType: {
         text: Sprite.from(textures.wheat),
         coord: [1505, 925],
-        size: 0.12,
+        size: 0.045,
       },
     },
     port7: {
