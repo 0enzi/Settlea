@@ -70,35 +70,33 @@ async function initializeApp(app: Application, ctx: any): Promise<void> {
 }
 
 async function setupMap(app: Application, container: Container): Promise<void> {
-  const texture: Texture = await Assets.load(
-    "../../assets/temp_background.png"
-  );
+  const textures = await loadAllAssets();
 
-  setupBackground(texture, container);
+  setupBackground(textures["background"], container);
   centerCanvas(app);
-  generateMap(container);
+  generateMap(textures, container);
 
   app.stage.addChild(container);
+}
 
-  // Define the structure for all port mappings
-  const portMappings: Record<string, PortData> = {
-    // 0: generic, 1: wood, 2: brick, 3: sheep, 4: ore
-    port1: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [770, 490],
-      },
-      portType: {
-        text: "?", // 0 represents generic in this context
-        coord: [775, 465],
-      },
-    },
-    // Add other ports similarly...
-  };
+async function loadAllAssets() {
+  Assets.add({ alias: "background", src: "../../assets/temp_background.png" });
+  Assets.add({ alias: "wood", src: "../../assets/icons/wood.svg" });
+  Assets.add({ alias: "brick", src: "../../assets/icons/brick.svg" });
+  Assets.add({ alias: "sheep", src: "../../assets/icons/sheep.svg" });
+  Assets.add({ alias: "wheat", src: "../../assets/icons/wheat.svg" });
+  Assets.add({ alias: "ore", src: "../../assets/icons/rock.svg" });
 
-  for (const portName in portMappings) {
-    addPorts(portMappings[portName], container);
-  }
+  const assets = Assets.load([
+    "wood",
+    "brick",
+    "sheep",
+    "wheat",
+    "ore",
+    "background",
+  ]);
+
+  return assets;
 }
 
 function addPorts(portData: PortData, container: Container): void {
@@ -107,22 +105,34 @@ function addPorts(portData: PortData, container: Container): void {
     style: { fontFamily: "Rubik" },
   });
 
-  const typeText = new Text({
-    text: portData.portType.text,
-    style: { fontFamily: "Rubik", fontWeight: "bold" },
-  });
-
   ratesText.x = portData.exchangeRate.coord[0];
   ratesText.y = portData.exchangeRate.coord[1];
-  typeText.x = portData.portType.coord[0];
-  typeText.y = portData.portType.coord[1];
-
-  typeText.style.fontSize = 25;
   ratesText.style.fontSize = 20;
-
   container.addChild(ratesText);
-  container.addChild(typeText);
+
+  // if its a sprite
+  if (portData.portType.text instanceof Sprite) {
+    const typeSprite = portData.portType.text as Sprite;
+    typeSprite.anchor.set(0.5);
+    typeSprite.position.set(
+      portData.portType.coord[0],
+      portData.portType.coord[1]
+    );
+
+    typeSprite.scale.set(portData.portType.size);
+    container.addChild(typeSprite);
+  } else {
+    const typeText = new Text({
+      text: portData.portType.text,
+      style: { fontFamily: "Rubik", fontWeight: "bold" },
+    });
+
+    typeText.x = portData.portType.coord[0];
+    typeText.y = portData.portType.coord[1];
+    container.addChild(typeText);
+  }
 }
+
 function setupBackground(texture: Texture, container: Container): void {
   texture.source.scaleMode = "nearest";
   const background = new Sprite(texture);
@@ -180,7 +190,10 @@ function setupEventListeners(app: Application, container: Container): void {
   app.canvas.addEventListener("mouseleave", stopPanning);
 }
 
-function generateMap(container: Container): void {
+async function generateMap(
+  textures: Record<string, Texture>,
+  container: Container
+): Promise<void> {
   const map: Set<Hex> = new Set();
   const N = 2;
   const layoutPointy = new Orientation(
@@ -221,6 +234,113 @@ function generateMap(container: Container): void {
     }
     graphics.lineTo(corners[0].x, corners[0].y);
     graphics.stroke({ width: 0.5, color: 0x183a37 });
+  }
+
+  //  This is probably the most stupid way to do this, but id love to see better suggestions
+  const portMappings: Record<string, PortData> = {
+    // 0: generic, 1: wood, 2: brick, 3: sheep, 4: ore
+    port1: {
+      exchangeRate: {
+        text: "3:1",
+        coord: [770, 490],
+      },
+      portType: {
+        text: "?",
+        coord: [775, 465],
+      },
+    },
+    port2: {
+      exchangeRate: {
+        text: "2:1",
+        coord: [933, 215],
+      },
+      portType: {
+        text: Sprite.from(textures.wood),
+        coord: [945, 205],
+        size: 0.125,
+      },
+    },
+
+    port3: {
+      exchangeRate: {
+        text: "3:1",
+        coord: [1255, 210],
+      },
+      portType: {
+        text: Sprite.from(textures.brick),
+        coord: [1267, 200],
+        size: 0.35,
+      },
+    },
+
+    port4: {
+      exchangeRate: {
+        text: "3:1",
+        coord: [1505, 355],
+      },
+      portType: {
+        text: Sprite.from(textures.sheep),
+        coord: [1515, 345],
+        size: 0.4,
+      },
+    },
+
+    port5: {
+      exchangeRate: {
+        text: "2:1",
+        coord: [1675, 649],
+      },
+      portType: {
+        text: Sprite.from(textures.ore),
+        coord: [1688, 635],
+        size: 0.04,
+      },
+    },
+    port6: {
+      exchangeRate: {
+        text: "2:1",
+        coord: [1492, 935],
+      },
+      portType: {
+        text: Sprite.from(textures.wheat),
+        coord: [1505, 925],
+        size: 0.12,
+      },
+    },
+    port7: {
+      exchangeRate: {
+        text: "3:1",
+        coord: [1250, 1060],
+      },
+      portType: {
+        text: "?",
+        coord: [1255, 1033],
+      },
+    },
+    port8: {
+      exchangeRate: {
+        text: "3:1",
+        coord: [947, 1055],
+      },
+      portType: {
+        text: "?",
+        coord: [950, 1027],
+      },
+    },
+    port9: {
+      exchangeRate: {
+        text: "3:1",
+        coord: [761, 788],
+      },
+      portType: {
+        text: "?",
+        coord: [765, 760],
+      },
+    },
+  };
+
+  for (const portName in portMappings) {
+    addPorts(portMappings[portName], container);
   }
 
   container.addChild(graphics);
