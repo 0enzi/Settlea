@@ -59,7 +59,8 @@ async function initializeApp(app: Application, ctx: any): Promise<Viewport> {
     background: "#1099bb",
     width: width * 2,
     height: height * 2,
-    // antialias: true,
+    antialias: true,
+    autoDensity: true,
     // resolution: window.devicePixelRatio,
   });
   ctx.$el.appendChild(app.canvas);
@@ -97,7 +98,11 @@ async function loadAllAssets() {
   Assets.add({ alias: "sheep", src: "assets/icons/sheep.png" });
   Assets.add({ alias: "wheat", src: "assets/icons/wheat.png" });
   Assets.add({ alias: "ore", src: "assets/icons/rock.png" });
+  Assets.add({ alias: "wood_tile", src: "assets/tiles/wood.png" });
   Assets.add({ alias: "brick_tile", src: "assets/tiles/brick.png" });
+  Assets.add({ alias: "sheep_tile", src: "assets/tiles/sheep.png" });
+  Assets.add({ alias: "wheat_tile", src: "assets/tiles/wheat.png" });
+  Assets.add({ alias: "ore_tile", src: "assets/tiles/ore.png" });
 
   const assets = Assets.load([
     "wood",
@@ -106,7 +111,11 @@ async function loadAllAssets() {
     "wheat",
     "ore",
     "background",
+    "wood_tile",
     "brick_tile",
+    "sheep_tile",
+    "wheat_tile",
+    "ore_tile",
   ]);
 
   return assets;
@@ -147,7 +156,7 @@ function addPorts(portData: PortData, container: Container): void {
 }
 
 function setupBackground(texture: Texture, container: Container): void {
-  texture.source.scaleMode = "nearest";
+  texture.source.scaleMode = "linear";
   const background = new Sprite(texture);
   background.anchor.set(0.5);
   background.position.set(
@@ -194,13 +203,51 @@ async function generateMap(
   }
 
   for (const hex of map) {
-    const tileCenter: Point = hexToPixel(layout, hex);
-    const tile = new Sprite(textures.brick_tile);
-    tile.anchor.set(0.5);
-    tile.position.set(tileCenter.x, tileCenter.y);
-    tile.scale.set(0.47);
+    const tileContainer = new Container();
+    const sprites: Texture[] = [
+      textures.wood_tile,
+      textures.brick_tile,
+      textures.sheep_tile,
+      textures.wheat_tile,
+      textures.ore_tile,
+    ];
+    const randTile = new Sprite(
+      sprites[Math.floor(Math.random() * sprites.length)]
+    );
 
-    container.addChild(tile);
+    const tileCenter: Point = hexToPixel(layout, hex);
+    // const tile = new Sprite(textures.brick_tile);
+    randTile.anchor.set(0.5);
+    randTile.position.set(tileCenter.x, tileCenter.y);
+    randTile.scale.set(0.47);
+
+    const tokenNumber = new Text({
+      text: 8,
+      style: {
+        fontFamily: "Bungee",
+        fontSize: 35,
+        fill: "#000",
+      },
+    });
+
+    const tokenPip = new Text({
+      //random number from 1 to 5
+      text: "•".repeat(Math.floor(Math.random() * 5) + 1),
+
+      style: {
+        fontSize: 20,
+        fill: "#000",
+      },
+    });
+
+    tokenNumber.anchor.set(0.5);
+    tokenPip.anchor.set(0.5);
+    tokenNumber.position.set(tileCenter.x, tileCenter.y + 20);
+    tokenPip.position.set(tileCenter.x, tileCenter.y + 45);
+
+    tileContainer.addChild(randTile);
+    tileContainer.addChild(tokenNumber);
+    tileContainer.addChild(tokenPip);
 
     const corners = polygonCorners(layout, hex);
     graphics.moveTo(corners[0].x, corners[0].y);
@@ -209,7 +256,9 @@ async function generateMap(
       graphics.lineTo(corners[i].x, corners[i].y);
     }
     graphics.lineTo(corners[0].x, corners[0].y);
-    graphics.stroke({ width: 1, color: 0x183a37 });
+    graphics.stroke({ width: 0.5, color: 0x000, alpha: 0.5 });
+
+    container.addChild(tileContainer);
   }
 
   //  This is probably the most stupid way to do this, but id love to see better suggestions
