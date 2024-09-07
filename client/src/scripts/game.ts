@@ -15,7 +15,10 @@ import {
   Orientation,
   Point,
   polygonCorners,
+  hexToPixel,
 } from "../library/Hex";
+
+import { Viewport } from "pixi-viewport";
 
 import type { PortData } from "../library/types";
 
@@ -27,12 +30,11 @@ export async function init(ctx: any): Promise<void> {
   const container = new Container();
 
   app = new Application();
-  await initializeApp(app, ctx);
+  const viewport = await initializeApp(app, ctx);
 
   await setupMap(app, container);
 
-  // TODO: uncomment and add zoom at mouse coords
-  // setupEventListeners(app, container);
+  viewport.addChild(container);
 
   // Adding a feature to display canvas coordinates
   app.stage.eventMode = "static";
@@ -50,23 +52,32 @@ export async function init(ctx: any): Promise<void> {
   text.y = 10;
 
   app.stage.addChild(text);
-
-  app.stage.addEventListener("pointermove", (e) => {
-    text.text = `${Math.round(e.global.x * 100) / 100}, ${
-      Math.round(e.global.y * 100) / 100
-    }`;
-  });
 }
 
-async function initializeApp(app: Application, ctx: any): Promise<void> {
+async function initializeApp(app: Application, ctx: any): Promise<Viewport> {
   await app.init({
     background: "#1099bb",
-    width: width * window.devicePixelRatio,
-    height: height * window.devicePixelRatio,
+    width: width * 2,
+    height: height * 2,
     // antialias: true,
-    resolution: window.devicePixelRatio,
+    // resolution: window.devicePixelRatio,
   });
   ctx.$el.appendChild(app.canvas);
+
+  const viewport = new Viewport({
+    screenWidth: width * 2,
+    screenHeight: height * 2,
+    worldWidth: width,
+    worldHeight: height,
+    // back
+    events: app.renderer.events,
+  });
+
+  app.stage.addChild(viewport);
+
+  viewport.drag().pinch().wheel().decelerate();
+
+  return viewport;
 }
 
 async function setupMap(app: Application, container: Container): Promise<void> {
@@ -80,12 +91,13 @@ async function setupMap(app: Application, container: Container): Promise<void> {
 }
 
 async function loadAllAssets() {
-  Assets.add({ alias: "background", src: "../../assets/temp_background.png" });
-  Assets.add({ alias: "wood", src: "../../assets/icons/wood.png" });
-  Assets.add({ alias: "brick", src: "../../assets/icons/brick.png" });
-  Assets.add({ alias: "sheep", src: "../../assets/icons/sheep.png" });
-  Assets.add({ alias: "wheat", src: "../../assets/icons/wheat.png" });
-  Assets.add({ alias: "ore", src: "../../assets/icons/rock.png" });
+  Assets.add({ alias: "background", src: "assets/temp_background.png" });
+  Assets.add({ alias: "wood", src: "assets/icons/wood.png" });
+  Assets.add({ alias: "brick", src: "assets/icons/brick.png" });
+  Assets.add({ alias: "sheep", src: "assets/icons/sheep.png" });
+  Assets.add({ alias: "wheat", src: "assets/icons/wheat.png" });
+  Assets.add({ alias: "ore", src: "assets/icons/rock.png" });
+  Assets.add({ alias: "brick_tile", src: "assets/tiles/brick.png" });
 
   const assets = Assets.load([
     "wood",
@@ -94,6 +106,7 @@ async function loadAllAssets() {
     "wheat",
     "ore",
     "background",
+    "brick_tile",
   ]);
 
   return assets;
@@ -145,51 +158,6 @@ function setupBackground(texture: Texture, container: Container): void {
   container.addChild(background);
 }
 
-function setupEventListeners(app: Application, container: Container): void {
-  let isPanning = false;
-  let lastX = 0;
-  let lastY = 0;
-  const panningSpeed = 1.5;
-  const zoomSpeed = 0.04;
-  const minZoom = 0.5;
-  const maxZoom = 2.0;
-  let currentScale = 1;
-
-  window.addEventListener("wheel", (event: WheelEvent) => {
-    event.preventDefault();
-    const scaleChange = event.deltaY > 0 ? 1 - zoomSpeed : 1 + zoomSpeed;
-    currentScale *= scaleChange;
-    currentScale = Math.max(minZoom, Math.min(maxZoom, currentScale));
-    container.scale.set(currentScale);
-  });
-
-  app.canvas.addEventListener("mousedown", (event: MouseEvent) => {
-    isPanning = true;
-    lastX = event.clientX;
-    lastY = event.clientY;
-  });
-
-  app.canvas.addEventListener("mousemove", (event: MouseEvent) => {
-    if (!isPanning) return;
-
-    const deltaX = (event.clientX - lastX) * panningSpeed;
-    const deltaY = (event.clientY - lastY) * panningSpeed;
-
-    container.position.x += deltaX;
-    container.position.y += deltaY;
-
-    lastX = event.clientX;
-    lastY = event.clientY;
-  });
-
-  const stopPanning = () => {
-    isPanning = false;
-  };
-
-  app.canvas.addEventListener("mouseup", stopPanning);
-  app.canvas.addEventListener("mouseleave", stopPanning);
-}
-
 async function generateMap(
   textures: Record<string, Texture>,
   container: Container
@@ -226,6 +194,14 @@ async function generateMap(
   }
 
   for (const hex of map) {
+    const tileCenter: Point = hexToPixel(layout, hex);
+    const tile = new Sprite(textures.brick_tile);
+    tile.anchor.set(0.5);
+    tile.position.set(tileCenter.x, tileCenter.y);
+    tile.scale.set(0.47);
+
+    container.addChild(tile);
+
     const corners = polygonCorners(layout, hex);
     graphics.moveTo(corners[0].x, corners[0].y);
 
@@ -233,7 +209,7 @@ async function generateMap(
       graphics.lineTo(corners[i].x, corners[i].y);
     }
     graphics.lineTo(corners[0].x, corners[0].y);
-    graphics.stroke({ width: 0.5, color: 0x183a37 });
+    graphics.stroke({ width: 1, color: 0x183a37 });
   }
 
   //  This is probably the most stupid way to do this, but id love to see better suggestions
