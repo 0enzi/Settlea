@@ -1,11 +1,3 @@
-<style scoped>
-@font-face {
-  font-family: "Rubik";
-  src: url("https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap")
-    format("ttf");
-}
-</style>
-
 <template>
   <div class="baseGame"></div>
 </template>

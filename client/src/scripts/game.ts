@@ -222,11 +222,11 @@ async function generateMap(
     randTile.scale.set(0.47);
 
     const tokenNumber = new Text({
-      text: 8,
+      text: Math.floor(Math.random() * 10 + 2),
       style: {
         fontFamily: "Bungee",
         fontSize: 35,
-        fill: "#000",
+        fill: "#183A37",
       },
     });
 
