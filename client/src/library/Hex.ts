@@ -1,4 +1,7 @@
 // adapted from https://www.redblobgames.com/grids/hexagons/
+
+import { HexTile } from "./types";
+
 // hexagons are the bestagons 😻
 export class Hex {
   private static readonly DIRECTIONS: [number, number, number][] = [
@@ -124,7 +127,7 @@ export class Layout {
   }
 }
 
-export function hexToPixel(layout: Layout, h: Hex): Point {
+export function hexToPixel(layout: Layout, h: Hex | HexTile): Point {
   const M = layout.orientation.forwardMatrix;
   const x = (M[0][0] * h.q + M[0][1] * h.r) * layout.size.x;
   const y = (M[1][0] * h.q + M[1][1] * h.r) * layout.size.y;

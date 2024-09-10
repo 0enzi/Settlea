@@ -1,3 +1,4 @@
+// pixijs
 import {
   Application,
   Assets,
@@ -8,7 +9,9 @@ import {
   BitmapText,
   Text,
 } from "pixi.js";
+import { Viewport } from "pixi-viewport";
 
+// own lib
 import {
   Hex,
   Layout,
@@ -17,26 +20,28 @@ import {
   polygonCorners,
   hexToPixel,
 } from "../library/Hex";
+import { ApiClient } from "../library/api";
 
-import { Viewport } from "pixi-viewport";
-
+// types
 import type { PortData } from "../library/types";
+import type { HexMap, HexTile } from "../library/types";
 
 const width = 1200;
 const height = 650;
 
 export async function init(ctx: any): Promise<void> {
   let app: Application = ctx.app;
+  const api = new ApiClient("http://127.0.0.1:8000/");
   const container = new Container();
 
   app = new Application();
   const viewport = await initializeApp(app, ctx);
 
-  await setupMap(app, container);
+  await setupMap(api, app, container);
 
   viewport.addChild(container);
 
-  // Adding a feature to display canvas coordinates
+  // disp canvas coords
   app.stage.eventMode = "static";
   app.stage.hitArea = app.screen;
   const text = new BitmapText({
@@ -81,12 +86,27 @@ async function initializeApp(app: Application, ctx: any): Promise<Viewport> {
   return viewport;
 }
 
-async function setupMap(app: Application, container: Container): Promise<void> {
+async function setupMap(
+  api: ApiClient,
+  app: Application,
+  container: Container
+): Promise<void> {
   const textures = await loadAllAssets();
+  const hexMap: HexTile[] = await api
+    .get<{ hex_map: HexTile[] }>("game/gen-base-map")
+    .then((data) => {
+      return data.hex_map;
+    })
+    .catch((err) => {
+      console.log(err);
+      return [];
+    });
+
+  console.log(hexMap);
 
   setupBackground(textures["background"], container);
   centerCanvas(app);
-  generateMap(textures, container);
+  generateMap(hexMap, textures, container);
 
   app.stage.addChild(container);
 }
@@ -103,6 +123,7 @@ async function loadAllAssets() {
   Assets.add({ alias: "sheep_tile", src: "assets/tiles/sheep.png" });
   Assets.add({ alias: "wheat_tile", src: "assets/tiles/wheat.png" });
   Assets.add({ alias: "ore_tile", src: "assets/tiles/ore.png" });
+  Assets.add({ alias: "desert_tile", src: "assets/tiles/desert.png" });
 
   const assets = Assets.load([
     "wood",
@@ -116,6 +137,7 @@ async function loadAllAssets() {
     "sheep_tile",
     "wheat_tile",
     "ore_tile",
+    "desert_tile",
   ]);
 
   return assets;
@@ -168,6 +190,7 @@ function setupBackground(texture: Texture, container: Container): void {
 }
 
 async function generateMap(
+  hexMap: HexTile[],
   textures: Record<string, Texture>,
   container: Container
 ): Promise<void> {
@@ -196,67 +219,65 @@ async function generateMap(
 
   const graphics = new Graphics();
 
+  const hexLookup = (q: number, r: number, s: number) => {
+    return hexMap.find((tile) => tile.q === q && tile.r === r && tile.s === s);
+  };
+
   for (let q = -N; q <= N; q++) {
     for (let r = Math.max(-N, -q - N); r <= Math.min(N, -q + N); r++) {
       map.add(new Hex(q, r));
     }
   }
 
-  for (const hex of map) {
+  for (const hex of hexMap) {
     const tileContainer = new Container();
-    const sprites: Texture[] = [
-      textures.wood_tile,
-      textures.brick_tile,
-      textures.sheep_tile,
-      textures.wheat_tile,
-      textures.ore_tile,
-    ];
-    const randTile = new Sprite(
-      sprites[Math.floor(Math.random() * sprites.length)]
-    );
+
+    const hexData = hexLookup(hex.q, hex.r, hex.s);
+    if (!hexData) {
+      console.error(
+        `No data found for hex at q=${hex.q}, r=${hex.r}, s=${hex.s}`
+      );
+      continue;
+    }
+
+    const randTile = new Sprite(textures[`${hexData.resource}_tile`]);
 
     const tileCenter: Point = hexToPixel(layout, hex);
     // const tile = new Sprite(textures.brick_tile);
     randTile.anchor.set(0.5);
     randTile.position.set(tileCenter.x, tileCenter.y);
     randTile.scale.set(0.47);
-
-    const tokenNumber = new Text({
-      text: Math.floor(Math.random() * 10 + 2),
-      style: {
-        fontFamily: "Bungee",
-        fontSize: 35,
-        fill: "#183A37",
-      },
-    });
-
-    const tokenPip = new Text({
-      //random number from 1 to 5
-      text: "•".repeat(Math.floor(Math.random() * 5) + 1),
-
-      style: {
-        fontSize: 20,
-        fill: "#000",
-      },
-    });
-
-    tokenNumber.anchor.set(0.5);
-    tokenPip.anchor.set(0.5);
-    tokenNumber.position.set(tileCenter.x, tileCenter.y + 20);
-    tokenPip.position.set(tileCenter.x, tileCenter.y + 45);
-
     tileContainer.addChild(randTile);
-    tileContainer.addChild(tokenNumber);
-    tileContainer.addChild(tokenPip);
 
-    const corners = polygonCorners(layout, hex);
-    graphics.moveTo(corners[0].x, corners[0].y);
+    if (hex.resource !== "desert") {
+      const tokenNumber = new Text({
+        text: hex.token.toString(),
+        style: {
+          fontFamily: "Bungee",
+          fontSize: 35,
+          fill: hex.token === 6 || hex.token === 8 ? "#FF0000" : "#183A37",
+        },
+      });
 
-    for (let i = 1; i < corners.length; i++) {
-      graphics.lineTo(corners[i].x, corners[i].y);
+      const tokenPip = new Text({
+        //random number from 1 to 5
+        text: "•".repeat(hex.token === 7 ? 0 : 6 - Math.abs(7 - hex.token)),
+
+        style: {
+          fontSize: 16,
+          // red if token is 6 or 8
+          fill: hex.token === 6 || hex.token === 8 ? "#FF0000" : "#183A37",
+        },
+      });
+
+      tokenNumber.anchor.set(0.5);
+      tokenPip.anchor.set(0.5);
+      tokenNumber.position.set(tileCenter.x, tileCenter.y + 25);
+      tokenPip.position.set(tileCenter.x, tileCenter.y + 45);
+
+      tileContainer.addChild(tokenNumber);
+      tileContainer.addChild(tokenPip);
     }
-    graphics.lineTo(corners[0].x, corners[0].y);
-    graphics.stroke({ width: 0.5, color: 0x000, alpha: 0.5 });
 
     container.addChild(tileContainer);
   }
