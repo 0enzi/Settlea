@@ -10,8 +10,7 @@
 <p align="center"> Settlers of Catan Free Open Source Alternative </p>
 
 <p align="center">
-<b> Tech Stack: </b> Vue.js, Pixi.js, TypeScript for the frontend, and Python (FastAPI) for the backend apis and websocket serving.
-
+<b> Tech Stack: </b> Vue.js, Pixi.js, TypeScript, Golang
 </p>
 
 <div align="center">
@@ -22,7 +21,7 @@
 
 <h3> Mockup </h3>
 
-![Mock](https://i.ibb.co/wJbp6sq/Group-40.png)
+![Mock](./public/ui_mock_1.png)
 
 
 # Join Our Discord
