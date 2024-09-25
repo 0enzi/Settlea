@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Settlea - Chat with Profile Icons</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300;400&family=Outfit:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Outfit", sans-serif;
+        background-color: #f0f0f0;
+        padding: 20px;
+        color: #333;
+      }
+
+      .chat-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .chat-header {
+        background-color: #3f51b5;
+        color: #fff;
+        text-align: center;
+        padding: 15px;
+        font-family: "Londrina Solid", cursive;
+        font-size: 1.8rem;
+      }
+
+      .chatroom-display {
+        padding: 20px;
+        height: 350px;
+        overflow-y: auto;
+        border-bottom: 1px solid #ddd;
+        background-color: #fafafa;
+        font-size: 1.2rem;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chatroom-display .message {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        font-family: "Outfit", sans-serif;
+      }
+
+      .chatroom-display .message .profile-container {
+        position: relative;
+        margin-right: 10px;
+      }
+
+      /* Circle around profile icon */
+      .chatroom-display .message .profile-container .profile-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #000; /* Black outline */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .chatroom-display .message .profile-container i {
+        font-size: 1.5rem;
+        color: #000; /* Black user icon */
+      }
+
+      .chatroom-display .message .username {
+        margin-right: 5px;
+        font-weight: bold;
+        display: inline-block;
+        padding: 0 6px;
+        border-radius: 4px;
+        color: #000; /* Ensure text remains readable */
+      }
+
+      .chatroom-display .message .username.user1 {
+        background-color: #e57373; /* Red for Alice */
+      }
+
+      .chatroom-display .message .username.user2 {
+        background-color: #64b5f6; /* Blue for Bob */
+      }
+
+      .chatroom-display .message .username.user3 {
+        background-color: #81c784; /* Green for Charlie */
+      }
+
+      .input-container {
+        padding: 20px;
+        background-color: #f9f9f9;
+        display: flex;
+        align-items: center;
+      }
+
+      .input-container div {
+        flex-grow: 1;
+        border: 2px solid #ddd;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 1.2rem;
+        background-color: #fff;
+        min-height: 40px;
+        outline: none;
+        cursor: text;
+        font-family: "Outfit", sans-serif;
+      }
+
+      .input-container div:empty:before {
+        content: "Type your message...";
+        color: #aaa;
+        font-family: "Outfit", sans-serif;
+      }
+
+      .debug-info {
+        padding: 10px;
+        font-size: 0.9rem;
+        background-color: #f4f4f4;
+        border-top: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #555;
+      }
+
+      .debug-info span {
+        margin-right: 15px;
+      }
+
+      .status-connected {
+        color: #27ae60;
+      }
+
+      .status-disconnected {
+        color: #e74c3c;
+      }
+
+      .user-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .user-item {
+        padding: 5px;
+        background-color: #f1f1f1;
+        border-bottom: 1px solid #ddd;
+      }
+
+      /* Style for system messages */
+      .system-message {
+        font-style: italic;
+        color: #888;
+        text-align: center; /* Center system messages */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <!-- Chat Header -->
+      <div class="chat-header">Settlea Chat</div>
+
+      <!-- Messages Display -->
+      <div class="chatroom-display" id="chatroom-display"></div>
+
+      <!-- Message Input -->
+      <div class="input-container">
+        <div
+          id="message-input"
+          contenteditable="true"
+          spellcheck="false"
+          data-placeholder="Type your message..."
+        ></div>
+      </div>
+
+      <!-- User List -->
+      <div class="user-list-container">
+        <ul id="user-list" class="user-list"></ul>
+      </div>
+
+      <!-- Debug Info -->
+      <div class="debug-info">
+        <span id="ping">Ping: - ms</span>
+        <span id="connected-users">Users: -</span>
+        <span id="connection-status" class="status-disconnected">
+          Status: Disconnected
+        </span>
+      </div>
+    </div>
+
+    <script>
+      const users = {
+        user1: { name: "Alice", colorClass: "user1" },
+        user2: { name: "Bob", colorClass: "user2" },
+        user3: { name: "Charlie", colorClass: "user3" },
+      };
+
+      let currentUser = users.user1; // Simulating Alice as the current user
+      currentUser.name += Math.floor(Math.random() * 100); // Add a random number to Alice's name
+      const messageInput = document.getElementById("message-input");
+      const chatDisplay = document.getElementById("chatroom-display");
+      const pingElement = document.getElementById("ping");
+      const connectedUsersElement = document.getElementById("connected-users");
+      const connectionStatus = document.getElementById("connection-status");
+      const userListDisplay = document.getElementById("user-list");
+      let ws;
+      let lastPingTime;
+
+      // WebSocket connection
+      function connectWebSocket() {
+        ws = new WebSocket("ws://localhost:8080/ws/chat");
+
+        ws.onopen = function () {
+          connectionStatus.innerText = "Status: Connected";
+          connectionStatus.classList.replace(
+            "status-disconnected",
+            "status-connected"
+          );
+
+          const joinMessage = {
+            room: "general",
+            username: currentUser.name,
+            message: `${currentUser.name} has joined the room.`,
+            type: "join",
+          };
+          ws.send(JSON.stringify(joinMessage));
+
+          setInterval(() => {
+            lastPingTime = Date.now();
+            const pingMessage = { type: "ping" };
+            ws.send(JSON.stringify(pingMessage));
+          }, 5000);
+        };
+
+        ws.onmessage = function (event) {
+          try {
+            const message = JSON.parse(event.data);
+
+            if (message.type === "pong") {
+              const ping = Date.now() - lastPingTime;
+              pingElement.innerText = `Ping: ${ping} ms`;
+            } else if (message.type === "join" || message.type === "leave") {
+              displaySystemMessage(message.message); // Optionally show a system message
+              console.log("User join or leave detected:", message); // Check if join/leave are detected
+            } else if (message.type === "chat") {
+              displayMessage(
+                message.username in users
+                  ? users[message.username]
+                  : { name: message.username, colorClass: "user1" },
+                message.message
+              );
+            } else {
+              console.log("Unknown message type:", message.type);
+            }
+          } catch (error) {
+            console.error("Error processing message:", error);
+          }
+        };
+        ws.onerror = function (event) {
+          console.error("WebSocket error:", event);
+        };
+
+        ws.onclose = function () {
+          connectionStatus.innerText = "Status: Disconnected";
+          connectionStatus.classList.replace(
+            "status-connected",
+            "status-disconnected"
+          );
+        };
+      }
+
+      function sendMessage(message) {
+        const msg = {
+          room: "general",
+          username: currentUser.name,
+          message: message,
+          type: "chat",
+        };
+        ws.send(JSON.stringify(msg));
+      }
+
+      messageInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          const message = messageInput.innerText.trim();
+          if (message) {
+            sendMessage(message);
+            messageInput.innerText = "";
+          }
+        }
+      });
+
+      function displayMessage(user, message) {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message");
+
+        const profileContainer = document.createElement("div");
+        profileContainer.classList.add("profile-container", user.colorClass);
+
+        const profileCircle = document.createElement("div");
+        profileCircle.classList.add("profile-circle");
+
+        const profileIcon = document.createElement("i");
+        profileIcon.classList.add("fa-regular", "fa-user");
+
+        profileCircle.appendChild(profileIcon);
+        profileContainer.appendChild(profileCircle);
+
+        const username = document.createElement("span");
+        username.classList.add("username", user.colorClass);
+        username.innerHTML = `${user.name}`;
+
+        const messageContent = document.createElement("span");
+        messageContent.innerText = `: ${message}`;
+
+        messageElement.appendChild(profileContainer);
+        messageElement.appendChild(username);
+        messageElement.appendChild(messageContent);
+
+        chatDisplay.appendChild(messageElement);
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+      }
+
+      function displaySystemMessage(message) {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message", "system-message");
+
+        const messageContent = document.createElement("span");
+        messageContent.innerText = message;
+
+        messageElement.appendChild(messageContent);
+
+        chatDisplay.appendChild(messageElement);
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+      }
+
+      window.onload = function () {
+        connectWebSocket();
+      };
+    </script>
+  </body>
+</html>
