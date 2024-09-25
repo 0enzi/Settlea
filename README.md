@@ -3,7 +3,7 @@ Settlea.org
 </h1>
 <p align="center"> Settlers of Catan Free Open Source Alternative </p>
 <p align="center">
-<b> Written in Typescript & Go, Python (discord client)</b>
+<b> Written in Typescript, Go & Python (discord client)</b>
 </p>
 <div align="center">
 
@@ -18,6 +18,7 @@ Settlea.org
 
 
 # Join Our Discord
-TBD
+https://discord.gg/37RxHpKSsH
 
+there's literally no one in yet💀
 </a>
