@@ -1,5 +1,5 @@
 <h1 align="center">
- <img src="public/trash-logo-1.png" width="300" />
+Settlea.org
 </h1>
 <p align="center"> Settlers of Catan Free Open Source Alternative </p>
 <p align="center">
