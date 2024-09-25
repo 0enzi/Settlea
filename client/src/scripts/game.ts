@@ -1,69 +1,173 @@
 // pixijs
-import {
-  Application,
-  Assets,
-  Sprite,
-  Texture,
-  Graphics,
-  Container,
-  BitmapText,
-  Text,
-} from "pixi.js";
+import * as PIXI from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
-// own lib
-import {
-  Hex,
-  Layout,
-  Orientation,
-  Point,
-  polygonCorners,
-  hexToPixel,
-} from "../library/Hex";
-import { ApiClient } from "../library/api";
+// own functions
+import { generateMap, setupBackground, centerCanvas } from "./map/renderMap";
+import { loadAllAssets } from "./map/utils";
+import { ApiClient } from "@/library/api";
+import config from "@/config";
+import { polygonCorners, Orientation, Point, Layout } from "@/library/Hex";
 
 // types
-import type { PortData } from "../library/types";
-import type { HexMap, HexTile } from "../library/types";
-
-const width = 1200;
-const height = 650;
+import type { HexTile, TileAPIResponse } from "@/library/types";
 
 export async function init(ctx: any): Promise<void> {
-  let app: Application = ctx.app;
-  const api = new ApiClient("http://127.0.0.1:8000/");
-  const container = new Container();
+  let app: PIXI.Application = ctx.app;
+  const api = new ApiClient(config.apiUrl);
+  const container = new PIXI.Container();
 
-  app = new Application();
+  app = new PIXI.Application();
   const viewport = await initializeApp(app, ctx);
 
   await setupMap(api, app, container);
 
   viewport.addChild(container);
-
-  // disp canvas coords
   app.stage.eventMode = "static";
   app.stage.hitArea = app.screen;
-  const text = new BitmapText({
-    text: "?",
-    style: {
-      fontFamily: "Rubik",
-      fontSize: 55,
-      align: "left",
-    },
-  });
 
-  text.x = 10;
-  text.y = 10;
+  async function setupMap(
+    api: ApiClient,
+    app: PIXI.Application,
+    container: PIXI.Container
+  ): Promise<void> {
+    const textures = await loadAllAssets();
+    const layoutPointy = new Orientation(
+      [
+        [Math.sqrt(3.0), Math.sqrt(3.0) / 2.0],
+        [0.0, 3.0 / 2.0],
+      ],
+      [
+        [Math.sqrt(3.0) / 3.0, -1.0 / 3.0],
+        [0.0, 2.0 / 3.0],
+      ],
+      0.5
+    );
+    // const hexMap: HexTile[] = await api
+    //   .get<{ hex_map: HexTile[] }>("game/generate-base-board")
+    //   .then((data) => {
+    //     console.log(data);
+    //     // return data.hex_map;
+    //     return [];
+    //   })
+    //   .catch((err) => {
+    //     console.log(err);
+    //     return [];
+    //   });
 
-  app.stage.addChild(text);
+    const hexMap: HexTile[] = await api
+      .get<TileAPIResponse>("game/generate-base-board")
+      .then((data) => {
+        return data.tiles;
+      })
+      .catch((err) => {
+        console.log(err);
+        return [];
+      });
+
+    setupBackground(textures["background"], container);
+    centerCanvas(app);
+    generateMap(hexMap, layoutPointy, textures, container);
+    placeStructures(hexMap, layoutPointy, container);
+
+    app.stage.addChild(container);
+  }
+
+  function placeStructures(
+    hexMap: HexTile[],
+    layoutPointy: Orientation,
+    container: PIXI.Container
+  ): void {
+    const uniquePoints = new Set<string>(); // Set to store unique points
+    const layout = new Layout(
+      layoutPointy,
+      new Point(92, 92),
+      new Point(
+        (config.width * window.devicePixelRatio) / 2,
+        (config.height * window.devicePixelRatio) / 2
+      )
+    );
+    console.log(
+      (config.width * window.devicePixelRatio) / 2,
+      (config.height * window.devicePixelRatio) / 2
+    );
+    for (const hex of hexMap) {
+      polygonCorners(layout, hex).forEach((point: Point) => {
+        const roundedX = Math.round(point.x * 1000) / 1000;
+        const roundedY = Math.round(point.y * 1000) / 1000;
+        const pointKey = `${roundedX},${roundedY}`;
+        uniquePoints.add(pointKey);
+      });
+    }
+
+    const cornerContainers: PIXI.Container[] = [];
+
+    uniquePoints.forEach((pointKey) => {
+      const point = pointKey.split(",").map((x) => parseInt(x));
+      const circle = new PIXI.Graphics();
+      const cornerContainer = new PIXI.Container();
+      const drawCirc = (alpha: number) => {
+        circle.clear();
+        circle.circle(0, 0, 21);
+        circle.fill({ color: 0xffffff, alpha: alpha });
+        circle.stroke({ color: 0x000 });
+      };
+      cornerContainer.interactive = true;
+      cornerContainer.cursor = "pointer";
+
+      drawCirc(0.2);
+
+      cornerContainer.position.set(point[0], point[1]);
+      cornerContainer.addChild(circle);
+      container.addChild(cornerContainer);
+      cornerContainers.push(cornerContainer);
+
+      cornerContainer.on("mouseover", () => {
+        drawCirc(0.8);
+      });
+
+      cornerContainer.on("mouseout", () => {
+        drawCirc(0.2);
+      });
+
+      cornerContainer.on("click", () => {
+        console.log("clicked on ", pointKey);
+      });
+    });
+
+    // const scaleDirection = 1;
+    const minScale = 0.8;
+    const maxScale = 1.2;
+    const scaleSpeed = 0.008;
+
+    app.ticker.add(() => {
+      cornerContainers.forEach((container) => {
+        // Ensure container has a scaleDirection property
+        if (!("scaleDirection" in container)) {
+          (container as any).scaleDirection = 1;
+        }
+
+        const scaleDirection = (container as any).scaleDirection;
+
+        container.scale.x += scaleDirection * scaleSpeed;
+        container.scale.y += scaleDirection * scaleSpeed;
+
+        if (container.scale.x >= maxScale || container.scale.x <= minScale) {
+          (container as any).scaleDirection *= -1;
+        }
+      });
+    });
+  }
 }
 
-async function initializeApp(app: Application, ctx: any): Promise<Viewport> {
+async function initializeApp(
+  app: PIXI.Application,
+  ctx: any
+): Promise<Viewport> {
   await app.init({
     background: "#1099bb",
-    width: width * 2,
-    height: height * 2,
+    width: config.width * 2,
+    height: config.height * 2,
     antialias: true,
     autoDensity: true,
     // resolution: window.devicePixelRatio,
@@ -71,332 +175,15 @@ async function initializeApp(app: Application, ctx: any): Promise<Viewport> {
   ctx.$el.appendChild(app.canvas);
 
   const viewport = new Viewport({
-    screenWidth: width * 2,
-    screenHeight: height * 2,
-    worldWidth: width,
-    worldHeight: height,
+    screenWidth: config.width * 2,
+    screenHeight: config.height * 2,
+    worldWidth: config.width,
+    worldHeight: config.height,
     // back
     events: app.renderer.events,
   });
 
   app.stage.addChild(viewport);
-
-  viewport.drag().pinch().wheel().decelerate();
-
+  viewport.drag().pinch().wheel();
   return viewport;
-}
-
-async function setupMap(
-  api: ApiClient,
-  app: Application,
-  container: Container
-): Promise<void> {
-  const textures = await loadAllAssets();
-  const hexMap: HexTile[] = await api
-    .get<{ hex_map: HexTile[] }>("game/gen-base-map")
-    .then((data) => {
-      return data.hex_map;
-    })
-    .catch((err) => {
-      console.log(err);
-      return [];
-    });
-
-  console.log(hexMap);
-
-  setupBackground(textures["background"], container);
-  centerCanvas(app);
-  generateMap(hexMap, textures, container);
-
-  app.stage.addChild(container);
-}
-
-async function loadAllAssets() {
-  Assets.add({ alias: "background", src: "assets/temp_background.png" });
-  Assets.add({ alias: "wood", src: "assets/icons/wood.png" });
-  Assets.add({ alias: "brick", src: "assets/icons/brick.png" });
-  Assets.add({ alias: "sheep", src: "assets/icons/sheep.png" });
-  Assets.add({ alias: "wheat", src: "assets/icons/wheat.png" });
-  Assets.add({ alias: "ore", src: "assets/icons/rock.png" });
-  Assets.add({ alias: "wood_tile", src: "assets/tiles/wood.png" });
-  Assets.add({ alias: "brick_tile", src: "assets/tiles/brick.png" });
-  Assets.add({ alias: "sheep_tile", src: "assets/tiles/sheep.png" });
-  Assets.add({ alias: "wheat_tile", src: "assets/tiles/wheat.png" });
-  Assets.add({ alias: "ore_tile", src: "assets/tiles/ore.png" });
-  Assets.add({ alias: "desert_tile", src: "assets/tiles/desert.png" });
-
-  const assets = Assets.load([
-    "wood",
-    "brick",
-    "sheep",
-    "wheat",
-    "ore",
-    "background",
-    "wood_tile",
-    "brick_tile",
-    "sheep_tile",
-    "wheat_tile",
-    "ore_tile",
-    "desert_tile",
-  ]);
-
-  return assets;
-}
-
-function addPorts(portData: PortData, container: Container): void {
-  const ratesText = new Text({
-    text: portData.exchangeRate.text,
-    style: { fontFamily: "Rubik" },
-  });
-
-  ratesText.x = portData.exchangeRate.coord[0];
-  ratesText.y = portData.exchangeRate.coord[1];
-  ratesText.style.fontSize = 20;
-  container.addChild(ratesText);
-
-  // if its a sprite
-  if (portData.portType.text instanceof Sprite) {
-    const typeSprite = portData.portType.text as Sprite;
-    typeSprite.anchor.set(0.5);
-    typeSprite.position.set(
-      portData.portType.coord[0],
-      portData.portType.coord[1]
-    );
-
-    typeSprite.scale.set(portData.portType.size);
-    container.addChild(typeSprite);
-  } else {
-    const typeText = new Text({
-      text: portData.portType.text,
-      style: { fontFamily: "Rubik", fontWeight: "bold" },
-    });
-
-    typeText.x = portData.portType.coord[0];
-    typeText.y = portData.portType.coord[1];
-    container.addChild(typeText);
-  }
-}
-
-function setupBackground(texture: Texture, container: Container): void {
-  texture.source.scaleMode = "linear";
-  const background = new Sprite(texture);
-  background.anchor.set(0.5);
-  background.position.set(
-    (width * window.devicePixelRatio) / 2,
-    (height * window.devicePixelRatio) / 2
-  );
-  background.scale.set(0.65);
-  container.addChild(background);
-}
-
-async function generateMap(
-  hexMap: HexTile[],
-  textures: Record<string, Texture>,
-  container: Container
-): Promise<void> {
-  const map: Set<Hex> = new Set();
-  const N = 2;
-  const layoutPointy = new Orientation(
-    [
-      [Math.sqrt(3.0), Math.sqrt(3.0) / 2.0],
-      [0.0, 3.0 / 2.0],
-    ],
-    [
-      [Math.sqrt(3.0) / 3.0, -1.0 / 3.0],
-      [0.0, 2.0 / 3.0],
-    ],
-    0.5
-  );
-
-  const centerX = (width * window.devicePixelRatio) / 2;
-  const centerY = (height * window.devicePixelRatio) / 2;
-
-  const layout = new Layout(
-    layoutPointy,
-    new Point(92, 92),
-    new Point(centerX, centerY)
-  );
-
-  const graphics = new Graphics();
-
-  const hexLookup = (q: number, r: number, s: number) => {
-    return hexMap.find((tile) => tile.q === q && tile.r === r && tile.s === s);
-  };
-
-  for (let q = -N; q <= N; q++) {
-    for (let r = Math.max(-N, -q - N); r <= Math.min(N, -q + N); r++) {
-      map.add(new Hex(q, r));
-    }
-  }
-
-  for (const hex of hexMap) {
-    const tileContainer = new Container();
-
-    const hexData = hexLookup(hex.q, hex.r, hex.s);
-    if (!hexData) {
-      console.error(
-        `No data found for hex at q=${hex.q}, r=${hex.r}, s=${hex.s}`
-      );
-      continue;
-    }
-
-    const randTile = new Sprite(textures[`${hexData.resource}_tile`]);
-
-    const tileCenter: Point = hexToPixel(layout, hex);
-    // const tile = new Sprite(textures.brick_tile);
-    randTile.anchor.set(0.5);
-    randTile.position.set(tileCenter.x, tileCenter.y);
-    randTile.scale.set(0.47);
-    tileContainer.addChild(randTile);
-
-    if (hex.resource !== "desert") {
-      const tokenNumber = new Text({
-        text: hex.token.toString(),
-        style: {
-          fontFamily: "Bungee",
-          fontSize: 35,
-          fill: hex.token === 6 || hex.token === 8 ? "#FF0000" : "#183A37",
-        },
-      });
-
-      const tokenPip = new Text({
-        //random number from 1 to 5
-        text: "•".repeat(hex.token === 7 ? 0 : 6 - Math.abs(7 - hex.token)),
-
-        style: {
-          fontSize: 16,
-          // red if token is 6 or 8
-          fill: hex.token === 6 || hex.token === 8 ? "#FF0000" : "#183A37",
-        },
-      });
-
-      tokenNumber.anchor.set(0.5);
-      tokenPip.anchor.set(0.5);
-      tokenNumber.position.set(tileCenter.x, tileCenter.y + 25);
-      tokenPip.position.set(tileCenter.x, tileCenter.y + 45);
-
-      tileContainer.addChild(tokenNumber);
-      tileContainer.addChild(tokenPip);
-    }
-
-    container.addChild(tileContainer);
-  }
-
-  //  This is probably the most stupid way to do this, but id love to see better suggestions
-  const portMappings: Record<string, PortData> = {
-    // 0: generic, 1: wood, 2: brick, 3: sheep, 4: ore
-    port1: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [770, 490],
-      },
-      portType: {
-        text: "?",
-        coord: [775, 465],
-      },
-    },
-    port2: {
-      exchangeRate: {
-        text: "2:1",
-        coord: [933, 215],
-      },
-      portType: {
-        text: Sprite.from(textures.wood),
-        coord: [945, 205],
-        size: 0.039,
-      },
-    },
-
-    port3: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [1255, 210],
-      },
-      portType: {
-        text: Sprite.from(textures.brick),
-        coord: [1267, 200],
-        size: 0.35,
-      },
-    },
-
-    port4: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [1505, 355],
-      },
-      portType: {
-        text: Sprite.from(textures.sheep),
-        coord: [1515, 345],
-        size: 0.4,
-      },
-    },
-
-    port5: {
-      exchangeRate: {
-        text: "2:1",
-        coord: [1675, 649],
-      },
-      portType: {
-        text: Sprite.from(textures.ore),
-        coord: [1688, 635],
-        size: 0.04,
-      },
-    },
-    port6: {
-      exchangeRate: {
-        text: "2:1",
-        coord: [1492, 935],
-      },
-      portType: {
-        text: Sprite.from(textures.wheat),
-        coord: [1505, 925],
-        size: 0.045,
-      },
-    },
-    port7: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [1250, 1060],
-      },
-      portType: {
-        text: "?",
-        coord: [1255, 1033],
-      },
-    },
-    port8: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [947, 1055],
-      },
-      portType: {
-        text: "?",
-        coord: [950, 1027],
-      },
-    },
-    port9: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [761, 788],
-      },
-      portType: {
-        text: "?",
-        coord: [765, 760],
-      },
-    },
-  };
-
-  for (const portName in portMappings) {
-    addPorts(portMappings[portName], container);
-  }
-
-  container.addChild(graphics);
-}
-
-function centerCanvas(app: Application): void {
-  app.canvas.style.width = `${width}px`;
-  app.canvas.style.height = `${height}px`;
-  app.canvas.style.position = "absolute";
-  app.canvas.style.top = "50%";
-  app.canvas.style.left = "50%";
-  app.canvas.style.transform = "translate(-50%, -50%)";
 }

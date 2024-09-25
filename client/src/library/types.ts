@@ -15,13 +15,19 @@ export interface PortData {
 type ResourceType = "sheep" | "wood" | "brick" | "ore" | "wheat" | "desert";
 
 export interface HexTile {
-  q: number;
-  r: number;
-  s: number;
-  resource: ResourceType;
-  token: number;
+  Q: number;
+  R: number;
+  S: number;
+  Type: ResourceType;
+  Token: number;
 }
 
 export interface HexMap {
   hex_map: HexTile[];
+}
+
+export interface TileAPIResponse {
+  tiles: HexTile[];
+  iterations: number;
+  duration: string;
 }

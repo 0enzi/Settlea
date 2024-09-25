@@ -1,4 +1,4 @@
-// adapted from https://www.redblobgames.com/grids/hexagons/
+// adapted from https://www.Redblobgames.com/grids/hexagons/
 
 import { HexTile } from "./types";
 
@@ -13,18 +13,18 @@ export class Hex {
     [0, 1, -1],
   ];
 
-  public q: number;
-  public r: number;
-  public s: number;
+  public Q: number;
+  public R: number;
+  public S: number;
 
   constructor(q: number, r: number) {
-    this.q = q;
-    this.r = r;
-    this.s = -q - r;
+    this.Q = q;
+    this.R = r;
+    this.S = -q - r;
   }
 
   equals(other: Hex): boolean {
-    return this.q === other.q && this.r === other.r && this.s === other.s;
+    return this.Q === other.Q && this.R === other.R && this.S === other.S;
   }
 
   notEquals(other: Hex): boolean {
@@ -32,11 +32,11 @@ export class Hex {
   }
 
   hashCode(): number {
-    return (this.q * 31 + this.r) * 31 + this.s;
+    return (this.Q * 31 + this.R) * 31 + this.S;
   }
 
   toString(): string {
-    return `Hex(q=${this.q}, r=${this.r}, s=${this.s})`;
+    return `Hex(q=${this.Q}, r=${this.R}, s=${this.S})`;
   }
 
   static getDirection(direction: number): Hex {
@@ -48,19 +48,19 @@ export class Hex {
   }
 
   add(other: Hex): Hex {
-    return new Hex(this.q + other.q, this.r + other.r);
+    return new Hex(this.Q + other.Q, this.R + other.R);
   }
 
   subtract(other: Hex): Hex {
-    return new Hex(this.q - other.q, this.r - other.r);
+    return new Hex(this.Q - other.Q, this.R - other.R);
   }
 
   multiply(scalar: number): Hex {
-    return new Hex(this.q * scalar, this.r * scalar);
+    return new Hex(this.Q * scalar, this.R * scalar);
   }
 
   length(): number {
-    return (Math.abs(this.q) + Math.abs(this.r) + Math.abs(this.s)) / 2;
+    return (Math.abs(this.Q) + Math.abs(this.R) + Math.abs(this.S)) / 2;
   }
 
   distanceFrom(other: Hex): number {
@@ -129,8 +129,8 @@ export class Layout {
 
 export function hexToPixel(layout: Layout, h: Hex | HexTile): Point {
   const M = layout.orientation.forwardMatrix;
-  const x = (M[0][0] * h.q + M[0][1] * h.r) * layout.size.x;
-  const y = (M[1][0] * h.q + M[1][1] * h.r) * layout.size.y;
+  const x = (M[0][0] * h.Q + M[0][1] * h.R) * layout.size.x;
+  const y = (M[1][0] * h.Q + M[1][1] * h.R) * layout.size.y;
   return new Point(x + layout.origin.x, y + layout.origin.y);
 }
 
@@ -140,7 +140,7 @@ export function hexCornerOffset(layout: Layout, corner: number): Point {
   return new Point(size.x * Math.cos(angle), size.y * Math.sin(angle));
 }
 
-export function polygonCorners(layout: Layout, h: Hex): Point[] {
+export function polygonCorners(layout: Layout, h: Hex | HexTile): Point[] {
   const corners: Point[] = [];
   const center = hexToPixel(layout, h);
   for (let i = 0; i < 6; i++) {
