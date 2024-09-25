@@ -1,25 +1,18 @@
-<h1 align="center" style="border-bottom: none">
-            <img src="https://i.ibb.co/VvT1KsK/S.png" width="40" />
- <div>
- <a href="#"> Settlea (WIP) </a>
-
-  </div>
- </h1>
-
-
+<h1 align="center">
+ <img src="public/trash-logo-1.png" width="300" />
+</h1>
 <p align="center"> Settlers of Catan Free Open Source Alternative </p>
-
 <p align="center">
-<b> Tech Stack: </b> Vue.js, Pixi.js, TypeScript, Golang
+<b> Written in Typescript & Go, Python (discord client)</b>
 </p>
-
 <div align="center">
 
 [![Node version](https://img.shields.io/badge/node-%3E%3D%2018.19.1-brightgreen)](http://nodejs.org/download/)
+[![Go version](https://img.shields.io/badge/go-1.23.1-cyan)](https://golang.org/dl/)
 [![Python version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue)](https://conventionalcommits.org)
 </div>
 
-<h3> Mockup </h3>
+<h3> Mock Design </h3>
 
 ![Mock](./public/ui_mock_1.png)
 
