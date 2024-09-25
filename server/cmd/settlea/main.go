@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"settlea/pkg/chat"
-	base_game "settlea/pkg/game/base"
+	"settlea/pkg/game/data"
 )
 
 type Config struct {
@@ -32,9 +32,10 @@ func loadConfig(filename string) error {
 }
 
 type BoardResponse struct {
-	Tiles      []*base_game.Tile `json:"tiles"`
-	Iterations int               `json:"iterations"`
-	Duration   string            `json:"duration"`
+	Tiles      []*data.Tile             `json:"tiles"`
+	Ports      map[string]data.PortData `json:"ports"`
+	Iterations int                      `json:"iterations"`
+	Duration   string                   `json:"duration"`
 }
 
 func main() {
@@ -78,16 +79,19 @@ func generateNewBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	normalSizeBoard := base_game.GenerateHexagonMap(2)
-	result, iterations, duration := base_game.StartValidation(normalSizeBoard)
+	normalSizeBoard := data.GenerateHexagonMap(2)
+	result, iterations, duration := data.StartValidation(normalSizeBoard)
 
-	tileSlice := make([]*base_game.Tile, 0, len(result))
+	tileSlice := make([]*data.Tile, 0, len(result))
 	for tile := range result {
 		tileSlice = append(tileSlice, tile)
 	}
 
+	ports := data.GeneratePorts(9)
+
 	response := BoardResponse{
 		Tiles:      tileSlice,
+		Ports:      ports,
 		Iterations: iterations,
 		Duration:   duration.String(),
 	}

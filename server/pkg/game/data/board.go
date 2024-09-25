@@ -1,4 +1,4 @@
-package base_game
+package data
 
 import (
 	"settlea/pkg/bestagons/hex"

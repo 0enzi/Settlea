@@ -10,7 +10,7 @@ import config from "@/config";
 import { polygonCorners, Orientation, Point, Layout } from "@/library/Hex";
 
 // types
-import type { HexTile, TileAPIResponse } from "@/library/types";
+import type { HexTile, TileAPIResponse, PortData } from "@/library/types";
 
 export async function init(ctx: any): Promise<void> {
   let app: PIXI.Application = ctx.app;
@@ -43,31 +43,20 @@ export async function init(ctx: any): Promise<void> {
       ],
       0.5
     );
-    // const hexMap: HexTile[] = await api
-    //   .get<{ hex_map: HexTile[] }>("game/generate-base-board")
-    //   .then((data) => {
-    //     console.log(data);
-    //     // return data.hex_map;
-    //     return [];
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //     return [];
-    //   });
 
-    const hexMap: HexTile[] = await api
+    const response = await api
       .get<TileAPIResponse>("game/generate-base-board")
       .then((data) => {
-        return data.tiles;
-      })
-      .catch((err) => {
-        console.log(err);
-        return [];
+        return data;
       });
+
+    const hexMap: HexTile[] = response.tiles;
+    const ports: Record<string, PortData> = response.ports;
+    console.log(response);
 
     setupBackground(textures["background"], container);
     centerCanvas(app);
-    generateMap(hexMap, layoutPointy, textures, container);
+    generateMap(hexMap, ports, layoutPointy, textures, container);
     placeStructures(hexMap, layoutPointy, container);
 
     app.stage.addChild(container);

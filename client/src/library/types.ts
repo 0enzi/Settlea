@@ -1,4 +1,4 @@
-import { Sprite } from "pixi.js";
+import * as PIXI from "pixi.js";
 
 export interface PortData {
   exchangeRate: {
@@ -6,7 +6,20 @@ export interface PortData {
     coord: [number, number];
   };
   portType: {
-    text: string | Sprite;
+    text: string;
+    coord: [number, number];
+    size?: number;
+  };
+}
+
+export interface PortRender {
+  exchangeRate: {
+    // text: PIXI.Text;
+    text: string;
+    coord: [number, number];
+  };
+  portType: {
+    text: PIXI.Sprite | string;
     coord: [number, number];
     size?: number;
   };
@@ -28,6 +41,7 @@ export interface HexMap {
 
 export interface TileAPIResponse {
   tiles: HexTile[];
+  ports: Record<string, PortData>;
   iterations: number;
   duration: string;
 }

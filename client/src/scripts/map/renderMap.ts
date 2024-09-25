@@ -1,11 +1,12 @@
 import * as PIXI from "pixi.js";
 import { Hex, Layout, Orientation, Point, hexToPixel } from "@/library/Hex";
 
-import type { HexTile, PortData } from "@/library/types";
+import type { HexTile, PortData, PortRender } from "@/library/types";
 import config from "@/config";
 
 export async function generateMap(
   hexMap: HexTile[],
+  ports: Record<string, PortData>,
   layoutPointy: Orientation,
   textures: Record<string, PIXI.Texture>,
   container: PIXI.Container
@@ -86,107 +87,141 @@ export async function generateMap(
   }
 
   //  This is probably the most stupid way to do this, but id love to see better suggestions
-  const portMappings: Record<string, PortData> = {
-    // 0: generic, 1: wood, 2: brick, 3: sheep, 4: ore
-    port1: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [770, 490],
-      },
-      portType: {
-        text: "?",
-        coord: [775, 465],
-      },
-    },
-    port2: {
-      exchangeRate: {
-        text: "2:1",
-        coord: [933, 215],
-      },
-      portType: {
-        text: PIXI.Sprite.from(textures.wood),
-        coord: [945, 205],
-        size: 0.039,
-      },
-    },
+  // const portMappings: Record<string, PortData> = {
+  //   // 0: generic, 1: wood, 2: brick, 3: sheep, 4: ore
+  //   port1: {
+  //     exchangeRate: {
+  //       text: "3:1",
+  //       coord: [770, 490],
+  //     },
+  //     portType: {
+  //       text: "?",
+  //       coord: [775, 465],
+  //     },
+  //   },
 
-    port3: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [1255, 210],
-      },
-      portType: {
-        text: PIXI.Sprite.from(textures.brick),
-        coord: [1267, 200],
-        size: 0.35,
-      },
-    },
+  //   port2: {
+  //     exchangeRate: {
+  //       text: "2:1",
+  //       coord: [933, 215],
+  //     },
+  //     portType: {
+  //       text: PIXI.Sprite.from(textures.wood),
+  //       coord: [945, 205],
+  //       size: 0.039,
+  //     },
+  //   },
 
-    port4: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [1505, 355],
-      },
-      portType: {
-        text: PIXI.Sprite.from(textures.sheep),
-        coord: [1515, 345],
-        size: 0.4,
-      },
-    },
+  //   port3: {
+  //     exchangeRate: {
+  //       text: "3:1",
+  //       coord: [1255, 210],
+  //     },
+  //     portType: {
+  //       text: PIXI.Sprite.from(textures.brick),
+  //       coord: [1267, 200],
+  //       size: 0.35,
+  //     },
+  //   },
 
-    port5: {
-      exchangeRate: {
-        text: "2:1",
-        coord: [1675, 649],
-      },
-      portType: {
-        text: PIXI.Sprite.from(textures.ore),
-        coord: [1688, 635],
-        size: 0.04,
-      },
-    },
-    port6: {
-      exchangeRate: {
-        text: "2:1",
-        coord: [1492, 935],
-      },
-      portType: {
-        text: PIXI.Sprite.from(textures.wheat),
-        coord: [1505, 925],
-        size: 0.045,
-      },
-    },
-    port7: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [1250, 1060],
-      },
-      portType: {
-        text: "?",
-        coord: [1255, 1033],
-      },
-    },
-    port8: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [947, 1055],
-      },
-      portType: {
-        text: "?",
-        coord: [950, 1027],
-      },
-    },
-    port9: {
-      exchangeRate: {
-        text: "3:1",
-        coord: [761, 788],
-      },
-      portType: {
-        text: "?",
-        coord: [765, 760],
-      },
-    },
+  //   port4: {
+  //     exchangeRate: {
+  //       text: "3:1",
+  //       coord: [1505, 355],
+  //     },
+  //     portType: {
+  //       text: PIXI.Sprite.from(textures.sheep),
+  //       coord: [1515, 345],
+  //       size: 0.4,
+  //     },
+  //   },
+
+  //   port5: {
+  //     exchangeRate: {
+  //       text: "2:1",
+  //       coord: [1675, 649],
+  //     },
+  //     portType: {
+  //       text: PIXI.Sprite.from(textures.ore),
+  //       coord: [1688, 635],
+  //       size: 0.04,
+  //     },
+  //   },
+
+  //   port6: {
+  //     exchangeRate: {
+  //       text: "2:1",
+  //       coord: [1492, 935],
+  //     },
+  //     portType: {
+  //       text: PIXI.Sprite.from(textures.wheat),
+  //       coord: [1505, 925],
+  //       size: 0.045,
+  //     },
+  //   },
+
+  //   port7: {
+  //     exchangeRate: {
+  //       text: "3:1",
+  //       coord: [1250, 1060],
+  //     },
+  //     portType: {
+  //       text: "?",
+  //       coord: [1255, 1033],
+  //     },
+  //   },
+
+  //   port8: {
+  //     exchangeRate: {
+  //       text: "3:1",
+  //       coord: [947, 1055],
+  //     },
+  //     portType: {
+  //       text: "?",
+  //       coord: [950, 1027],
+  //     },
+  //   },
+
+  //   port9: {
+  //     exchangeRate: {
+  //       text: "3:1",
+  //       coord: [761, 788],
+  //     },
+  //     portType: {
+  //       text: "?",
+  //       coord: [765, 760],
+  //     },
+  //   },
+  // };
+
+  const portTextures: Record<string, PIXI.Sprite> = {
+    wood: PIXI.Sprite.from(textures.wood),
+    brick: PIXI.Sprite.from(textures.brick),
+    sheep: PIXI.Sprite.from(textures.sheep),
+    ore: PIXI.Sprite.from(textures.ore),
+    wheat: PIXI.Sprite.from(textures.wheat),
   };
+
+  const portMappings: Record<string, PortRender> = {};
+  console.log(ports);
+
+  for (const [key, value] of Object.entries(ports)) {
+    console.log(value["exchangeRate"]);
+    portMappings[key] = {
+      exchangeRate: {
+        text: value.exchangeRate.text.toString(),
+        coord: value.exchangeRate.coord,
+      },
+      portType: {
+        text:
+          value.portType.text === "?" ? "?" : portTextures[value.portType.text],
+        coord: value.portType.coord,
+        size: value.portType.size, // Include size if it exists
+      },
+    };
+  }
+
+  // console.log(portMappings);
 
   for (const portName in portMappings) {
     addPorts(portMappings[portName], container);
@@ -195,7 +230,10 @@ export async function generateMap(
   container.addChild(graphics);
 }
 
-export function addPorts(portData: PortData, container: PIXI.Container): void {
+export function addPorts(
+  portData: PortRender,
+  container: PIXI.Container
+): void {
   const ratesText = new PIXI.Text({
     text: portData.exchangeRate.text,
     style: { fontFamily: "Rubik" },
