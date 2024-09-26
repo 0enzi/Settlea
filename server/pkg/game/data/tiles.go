@@ -1,7 +1,10 @@
 package data
 
 import (
+	"settlea/pkg/bestagons/edge"
+	"settlea/pkg/bestagons/grid"
 	"settlea/pkg/bestagons/hex"
+	"settlea/pkg/bestagons/vertex"
 	"settlea/pkg/utils"
 	"strconv"
 	"time"
@@ -159,4 +162,42 @@ func validateTiles(hex_map utils.Set[*Tile]) bool {
 	}
 
 	return true
+}
+
+func GenerateVertices(layout grid.Layout, tiles utils.Set[*Tile]) utils.Set[*vertex.Vertex] {
+	vertices := utils.Set[*vertex.Vertex]{}
+
+	for tile := range tiles {
+		// Get the hex position of the tile
+		hex := tile.Hex
+
+		// Get the vertices for this hex
+		tileVertices := layout.Vertices(hex)
+
+		// Add the vertices to the set (utils.Set will handle duplicates)
+		for _, v := range tileVertices {
+			vertices.Add(&v)
+		}
+	}
+
+	return vertices
+}
+
+func GenerateEdges(layout grid.Layout, tiles utils.Set[*Tile]) utils.Set[*edge.Edge] {
+	edges := utils.Set[*edge.Edge]{}
+
+	for tile := range tiles {
+		// Get the hex position of the tile
+		hex := tile.Hex
+
+		// Get the vertices for this hex
+		tileEdges := layout.Edges(hex)
+
+		for _, e := range tileEdges {
+			edges.Add(&e)
+		}
+
+	}
+
+	return edges
 }

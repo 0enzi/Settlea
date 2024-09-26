@@ -57,7 +57,7 @@ func TestVertices(t *testing.T) {
 	layout := Layout{layout_pointy, screen.MakeScreenCoord(50, 50), screen.MakeScreenCoord(0, 0)}
 	hexTest := hex.Hex{Q: 1, R: 1}
 
-	vertices := layout.vertices(hexTest)
+	vertices := layout.Vertices(hexTest)
 
 	expected := []vertex.Vertex{
 		*vertex.NewVertex(1, 1, vertex.North),
@@ -85,7 +85,7 @@ func TestEdges(t *testing.T) {
 
 	hexTest := hex.Hex{Q: 1, R: 1}
 
-	edges := layout.edges(hexTest)
+	edges := layout.Edges(hexTest)
 
 	expected := []edge.Edge{
 		*edge.NewEdge(1, 1, edge.NorthWest),

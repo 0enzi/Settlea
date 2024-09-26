@@ -1,6 +1,9 @@
 package data
 
 import (
+	"settlea/pkg/bestagons/grid"
+	"settlea/pkg/bestagons/orientation"
+	"settlea/pkg/bestagons/screen"
 	"testing"
 	// "time"
 )
@@ -29,4 +32,23 @@ func TestValidateTiles(t *testing.T) {
 	if !legal {
 		t.Errorf("Expected tiles to be valid but found conflicts")
 	}
+}
+
+func TestGenerateVertices(t *testing.T) {
+	tiles := GenerateHexagonMap(2)
+
+	layout := grid.Layout{
+		Orientation: orientation.MakeOrientation(orientation.PointyLayout), // kinda redundant since all layouts will b pointy
+		Origin:      screen.MakeScreenCoord(0, 0),
+		Size:        screen.MakeScreenCoord(92, 92),
+	}
+
+	vertices := GenerateVertices(layout, tiles)
+
+	expected_len := 54
+
+	if len(vertices) != expected_len {
+		t.Errorf("Expected %v, got %v", expected_len, vertices)
+	}
+
 }

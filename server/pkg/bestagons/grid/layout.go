@@ -11,21 +11,21 @@ import (
 const SQRT_3_2 = 0.8660254037844386
 
 type Layout struct {
-	orientation orientation.Orientation
-	size        screen.ScreenCoord
-	origin      screen.ScreenCoord
+	Orientation orientation.Orientation
+	Size        screen.ScreenCoord
+	Origin      screen.ScreenCoord
 }
 
 func (l Layout) vertexToPixel(v vertex.Vertex) screen.ScreenCoord {
 	q, r, direction := float64(v.Q), float64(v.R), v.Direction
 
-	x := l.size.X * (q + r/2 + 1.0/2.0) / SQRT_3_2
+	x := l.Size.X * (q + r/2 + 1.0/2.0) / SQRT_3_2
 	var y float64
 
 	if direction == "S" {
-		y = l.size.Y * (r + (7.0 / 6.0))
+		y = l.Size.Y * (r + (7.0 / 6.0))
 	} else {
-		y = l.size.Y * (r - (1.0 / 6.0)) // Ensure negative handling
+		y = l.Size.Y * (r - (1.0 / 6.0)) // Ensure negative handling
 	}
 	return screen.MakeScreenCoord(x, y)
 }
@@ -41,7 +41,7 @@ func (l Layout) neighbours(h hex.Hex) []hex.Hex {
 	}
 }
 
-func (l Layout) vertices(h hex.Hex) []vertex.Vertex {
+func (l Layout) Vertices(h hex.Hex) []vertex.Vertex {
 	return []vertex.Vertex{
 		*vertex.NewVertex(h.Q, h.R, vertex.North),
 		*vertex.NewVertex(h.Q+1, h.R-1, vertex.South),
@@ -52,7 +52,7 @@ func (l Layout) vertices(h hex.Hex) []vertex.Vertex {
 	}
 }
 
-func (l Layout) edges(h hex.Hex) []edge.Edge {
+func (l Layout) Edges(h hex.Hex) []edge.Edge {
 	return []edge.Edge{
 		*edge.NewEdge(h.Q, h.R, edge.NorthWest),
 		*edge.NewEdge(h.Q, h.R, edge.NorthEast),
