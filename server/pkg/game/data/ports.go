@@ -16,12 +16,6 @@ type PortData struct {
 	PortType     Port `json:"portType"`
 }
 
-// Base coordinates for ports; you could generate more based on patterns
-// var baseCoords = [][2]int{
-// 	{770, 490}, {933, 215}, {1255, 210}, {1505, 355},
-// 	{1675, 649}, {1492, 935}, {1250, 1060}, {947, 1055}, {761, 788},
-// }
-
 func ShufflePorts(portMappings map[string]PortData) map[string]PortData {
 	keys := make([]string, 0, len(portMappings))
 	for key := range portMappings {

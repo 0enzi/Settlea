@@ -141,7 +141,7 @@ func validateTiles(hex_map utils.Set[*Tile]) bool {
 	}
 
 	for tile := range hex_map {
-		for i := 0; i < 6; i++ { // Fix the loop
+		for i := 0; i < 6; i++ {
 			neighbour := tile.Hex.GetNeighbour(i)
 			neighbor_tile, exists := hex_dict[neighbour]
 
