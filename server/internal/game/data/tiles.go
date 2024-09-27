@@ -4,6 +4,7 @@ import (
 	"settlea/pkg/bestagons/edge"
 	"settlea/pkg/bestagons/grid"
 	"settlea/pkg/bestagons/hex"
+	"settlea/pkg/bestagons/screen"
 	"settlea/pkg/bestagons/vertex"
 	"settlea/pkg/utils"
 	"strconv"
@@ -15,6 +16,7 @@ type Tile struct {
 	Type    string
 	Token   int
 	Blocked bool
+	Coords  screen.ScreenCoord
 }
 
 func (t *Tile) setToken(token int) {
@@ -35,19 +37,15 @@ type Board struct {
 	Tiles utils.Set[Tile]
 }
 
-func NewBoard(N int) utils.Set[*Tile] {
+func NewBoard(N int) []*Tile {
 
 	settleaMap := GenerateHexagonMap(N)
-	// fmt.Println(settleaMap)
-
-	// for i := -N;
-	// return &Board{Tiles: tiles}
 
 	return settleaMap
 }
 
-func GenerateHexagonMap(N int) utils.Set[*Tile] {
-	tiles := utils.Set[*Tile]{}
+func GenerateHexagonMap(N int) []*Tile {
+	tiles := make([]*Tile, 0)
 
 	if N != 2 {
 		panic("Not implemented")
@@ -77,13 +75,13 @@ func GenerateHexagonMap(N int) utils.Set[*Tile] {
 				Token:   0,
 				Blocked: false,
 			}
-			tiles.Add(tile)
+			tiles = append(tiles, tile)
 		}
 	}
 	return tiles
 }
 
-func StartValidation(tiles utils.Set[*Tile]) (utils.Set[*Tile], int, time.Duration) {
+func StartValidation(tiles []*Tile) ([]*Tile, int, time.Duration) {
 	legal := false
 	iteration := 0
 	startTime := time.Now()
@@ -102,7 +100,7 @@ func StartValidation(tiles utils.Set[*Tile]) (utils.Set[*Tile], int, time.Durati
 		tokens = append(tokens, "12")
 
 		nonDesertCount := 0
-		for tile := range tiles {
+		for _, tile := range tiles {
 			if tile.Type != "desert" {
 				nonDesertCount++
 			}
@@ -113,7 +111,7 @@ func StartValidation(tiles utils.Set[*Tile]) (utils.Set[*Tile], int, time.Durati
 		}
 
 		shuffledTokens := utils.Shuffle(tokens)
-		for tile := range tiles {
+		for _, tile := range tiles {
 			if tile.Type == "desert" {
 				continue
 			}
@@ -136,14 +134,14 @@ func StartValidation(tiles utils.Set[*Tile]) (utils.Set[*Tile], int, time.Durati
 	return tiles, iteration, duration
 }
 
-func validateTiles(hex_map utils.Set[*Tile]) bool {
+func validateTiles(hex_map []*Tile) bool {
 	// Convert set to a map for faster lookups
 	hex_dict := make(map[hex.Hex]*Tile)
-	for tile := range hex_map {
+	for _, tile := range hex_map {
 		hex_dict[tile.Hex] = tile
 	}
 
-	for tile := range hex_map {
+	for _, tile := range hex_map {
 		for i := 0; i < 6; i++ {
 			neighbour := tile.Hex.GetNeighbour(i)
 			neighbor_tile, exists := hex_dict[neighbour]
@@ -164,10 +162,10 @@ func validateTiles(hex_map utils.Set[*Tile]) bool {
 	return true
 }
 
-func GenerateVertices(layout grid.Layout, tiles utils.Set[*Tile]) utils.Set[*vertex.Vertex] {
+func GenerateVertices(layout grid.Layout, tiles []*Tile) []*vertex.Vertex {
 	uniqueVertices := utils.Set[vertex.Vertex]{}
 
-	for tile := range tiles {
+	for _, tile := range tiles {
 		hex := tile.Hex
 		tileVertices := layout.Vertices(hex)
 		for _, v := range tileVertices {
@@ -175,18 +173,18 @@ func GenerateVertices(layout grid.Layout, tiles utils.Set[*Tile]) utils.Set[*ver
 		}
 	}
 
-	vertices := utils.Set[*vertex.Vertex]{}
-	for vp := range uniqueVertices {
-		vertices.Add(&vp)
-	} // ive commited serious abominations here
+	vertices := make([]*vertex.Vertex, 0, uniqueVertices.Size())
+	for v := range uniqueVertices {
+		vertices = append(vertices, &v)
+	}
 
 	return vertices
 }
 
-func GenerateEdges(layout grid.Layout, tiles utils.Set[*Tile]) utils.Set[*edge.Edge] {
+func GenerateEdges(layout grid.Layout, tiles []*Tile) []*edge.Edge {
 	uniqueEdges := utils.Set[edge.Edge]{}
 
-	for tile := range tiles {
+	for _, tile := range tiles {
 		hex := tile.Hex
 		tileEdges := layout.Edges(hex)
 		for _, e := range tileEdges {
@@ -195,11 +193,28 @@ func GenerateEdges(layout grid.Layout, tiles utils.Set[*Tile]) utils.Set[*edge.E
 		}
 	}
 
-	edges := utils.Set[*edge.Edge]{}
+	edges := make([]*edge.Edge, 0, uniqueEdges.Size())
 	for e := range uniqueEdges {
-		edges.Add(&e)
+		edges = append(edges, &e)
 
 	}
 
 	return edges
+}
+
+func GenerateCorners(layout grid.Layout, vertices []*vertex.Vertex) []*Corner {
+	corners := make([]*Corner, 0)
+
+	for _, v := range vertices {
+		corner := &Corner{
+			Vertex:    *v,
+			Coords:    layout.VertexToPixel(*v),
+			Structure: nil,
+			IsPort:    false,
+			PortType:  "",
+		}
+		corners = append(corners, corner)
+	}
+
+	return corners
 }

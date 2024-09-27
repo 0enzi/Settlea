@@ -16,7 +16,7 @@ type Layout struct {
 	Origin      screen.ScreenCoord
 }
 
-func (l Layout) vertexToPixel(v vertex.Vertex) screen.ScreenCoord {
+func (l Layout) VertexToPixel(v vertex.Vertex) screen.ScreenCoord {
 	q, r, direction := float64(v.Q), float64(v.R), v.Direction
 
 	x := l.Size.X * (q + r/2 + 1.0/2.0) / SQRT_3_2

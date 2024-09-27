@@ -14,7 +14,7 @@ func TestVertexToPixel(t *testing.T) {
 
 	layout := Layout{layout_pointy, screen.MakeScreenCoord(50, 50), screen.MakeScreenCoord(0, 0)}
 	vertexTest := vertex.Vertex{Q: 0, R: 0, Direction: "N"}
-	pixelCoord := layout.vertexToPixel(vertexTest)
+	pixelCoord := layout.VertexToPixel(vertexTest)
 
 	expected := screen.MakeScreenCoord(28.86751345948129, -8.333333333333332)
 

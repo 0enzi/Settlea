@@ -5,8 +5,6 @@ import (
 	"settlea/pkg/bestagons/grid"
 	"settlea/pkg/bestagons/orientation"
 	"settlea/pkg/bestagons/screen"
-	"settlea/pkg/bestagons/vertex"
-	"settlea/pkg/utils"
 )
 
 var base_layout = grid.Layout{
@@ -16,10 +14,10 @@ var base_layout = grid.Layout{
 }
 
 type SettleaMap struct {
-	Layout   grid.Layout
-	Tiles    utils.Set[*Tile]
-	Vertices utils.Set[*vertex.Vertex]
-	Edges    utils.Set[*edge.Edge]
+	Layout  grid.Layout
+	Tiles   []*Tile
+	Corners []*Corner
+	Edges   []*edge.Edge
 }
 
 func (s *SettleaMap) NewMap(style string) *SettleaMap {
@@ -38,13 +36,15 @@ func (s *SettleaMap) setupMap(layout grid.Layout) *SettleaMap {
 	vertices := GenerateVertices(layout, tiles)
 	edges := GenerateEdges(layout, tiles)
 
+	corners := GenerateCorners(layout, vertices)
+
 	// Run StartValidation to assign tokens and get a valid configuration
 	validTiles, _, _ := StartValidation(tiles)
 
 	return &SettleaMap{
 		layout,
 		validTiles,
-		vertices,
+		corners,
 		edges,
 	}
 

@@ -9,12 +9,11 @@ import (
 	base_game "settlea/internal/game/base"
 	"settlea/internal/game/data"
 	"settlea/pkg/bestagons/edge"
-	"settlea/pkg/bestagons/vertex"
 )
 
 type BoardResponse struct {
 	Tiles      []*data.Tile             `json:"tiles"`
-	Vertices   []*vertex.Vertex         `json:"vertices"`
+	Corners    []*data.Corner           `json:"corners"`
 	Edges      []*edge.Edge             `json:"edges"`
 	Ports      map[string]data.PortData `json:"ports"`
 	Iterations int                      `json:"iterations"`
@@ -35,7 +34,7 @@ func newGame(w http.ResponseWriter, r *http.Request) {
 
 	// get tiles, vertices, edges
 	map_tiles := initialised_game.Board.Tiles
-	map_vertices := initialised_game.Board.Vertices
+	map_corners := initialised_game.Board.Corners
 	map_edges := initialised_game.Board.Edges
 
 	// validate tiles & allocate
@@ -46,9 +45,9 @@ func newGame(w http.ResponseWriter, r *http.Request) {
 
 	// send everything to client
 	response := BoardResponse{
-		Tiles:      map_tiles.ToSlice(), // assuming this is now populated correctly
-		Vertices:   map_vertices.ToSlice(),
-		Edges:      map_edges.ToSlice(),
+		Tiles:      map_tiles, // assuming this is now populated correctly
+		Corners:    map_corners,
+		Edges:      map_edges,
 		Ports:      ports,
 		Iterations: iterations,
 		Duration:   duration.String(),
