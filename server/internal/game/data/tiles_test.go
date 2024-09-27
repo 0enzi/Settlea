@@ -48,7 +48,7 @@ func TestGenerateVertices(t *testing.T) {
 	expected_len := 54
 
 	if len(vertices) != expected_len {
-		t.Errorf("Expected %v, got %v", expected_len, vertices)
+		t.Errorf("Expected %v, got %v", expected_len, len(vertices))
 	}
 
 }

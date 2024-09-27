@@ -6,15 +6,15 @@ import (
 
 // catan game
 type Game struct {
-	players []data.Player
+	Players []data.Player
 	// seed         int
-	discardLimit int
+	DiscardLimit int
 	vpsToWin     int
-	board        data.SettleaMap
-	ports        map[string]data.PortData
+	Board        *data.SettleaMap
+	Ports        map[string]data.PortData
 }
 
-func (g *Game) NewGame(players_no int, discardLimit int, vpsToWin int, style string, ports map[string]data.PortData) *Game {
+func (g *Game) InitGame(players_no int, discardLimit int, vpsToWin int, style string, ports map[string]data.PortData) *Game {
 	players := make([]data.Player, players_no)
 	settleaMap := &data.SettleaMap{}
 
@@ -22,7 +22,7 @@ func (g *Game) NewGame(players_no int, discardLimit int, vpsToWin int, style str
 		players,
 		discardLimit,
 		vpsToWin,
-		*settleaMap.NewMap(style),
+		settleaMap.NewMap(style),
 		ports,
 	}
 }

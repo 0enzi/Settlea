@@ -49,6 +49,14 @@ func Shuffle(slice []string) []string {
 	return shuffled
 }
 
+func (s Set[T]) ToSlice() []T {
+	slice := make([]T, 0, len(s))
+	for elem := range s {
+		slice = append(slice, elem)
+	}
+	return slice
+}
+
 // func Pop(slice *[]string) (string, []string, error) {
 // 	if len(*slice) == 0 {
 // 		return "", *slice, errors.New("slice is empty")

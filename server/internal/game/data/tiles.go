@@ -165,37 +165,39 @@ func validateTiles(hex_map utils.Set[*Tile]) bool {
 }
 
 func GenerateVertices(layout grid.Layout, tiles utils.Set[*Tile]) utils.Set[*vertex.Vertex] {
-	vertices := utils.Set[*vertex.Vertex]{}
+	uniqueVertices := utils.Set[vertex.Vertex]{}
 
 	for tile := range tiles {
-		// Get the hex position of the tile
 		hex := tile.Hex
-
-		// Get the vertices for this hex
 		tileVertices := layout.Vertices(hex)
-
-		// Add the vertices to the set (utils.Set will handle duplicates)
 		for _, v := range tileVertices {
-			vertices.Add(&v)
+			uniqueVertices.Add(v)
 		}
 	}
+
+	vertices := utils.Set[*vertex.Vertex]{}
+	for vp := range uniqueVertices {
+		vertices.Add(&vp)
+	} // ive commited serious abominations here
 
 	return vertices
 }
 
 func GenerateEdges(layout grid.Layout, tiles utils.Set[*Tile]) utils.Set[*edge.Edge] {
-	edges := utils.Set[*edge.Edge]{}
+	uniqueEdges := utils.Set[edge.Edge]{}
 
 	for tile := range tiles {
-		// Get the hex position of the tile
 		hex := tile.Hex
-
-		// Get the vertices for this hex
 		tileEdges := layout.Edges(hex)
-
 		for _, e := range tileEdges {
-			edges.Add(&e)
+			uniqueEdges.Add(e)
+
 		}
+	}
+
+	edges := utils.Set[*edge.Edge]{}
+	for e := range uniqueEdges {
+		edges.Add(&e)
 
 	}
 

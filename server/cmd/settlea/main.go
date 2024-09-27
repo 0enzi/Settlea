@@ -6,8 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"settlea/internal/chat"
-	"settlea/internal/game/data"
+	"settlea/api"
 )
 
 type Config struct {
@@ -31,13 +30,6 @@ func loadConfig(filename string) error {
 	return json.Unmarshal(data, &config)
 }
 
-type BoardResponse struct {
-	Tiles      []*data.Tile             `json:"tiles"`
-	Ports      map[string]data.PortData `json:"ports"`
-	Iterations int                      `json:"iterations"`
-	Duration   string                   `json:"duration"`
-}
-
 func main() {
 	err := loadConfig("config/config.json") // Update the path to your config file
 	if err != nil {
@@ -45,64 +37,13 @@ func main() {
 		return
 	}
 
-	http.HandleFunc("/ws/chat", chat.HandleConnections)
-	http.HandleFunc("/game/generate-base-board", generateNewBoard)
+	// Create the router
+	router := api.NewRouter()
 
-	go chat.HandleMessages()
-
+	// Start the server
 	slog.Info("Server started on port 8080")
-	err = http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":8080", router) // Use the router for the server
 	if err != nil {
 		slog.Error("Error starting server: " + err.Error())
 	}
-}
-
-func generateNewBoard(w http.ResponseWriter, r *http.Request) {
-	origin := r.Header.Get("Origin")
-	allowed := false
-	for _, allowedOrigin := range config.AllowedOrigins {
-		if origin == allowedOrigin {
-			allowed = true
-			break
-		}
-	}
-
-	if allowed {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-	}
-
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	normalSizeBoard := data.GenerateHexagonMap(2)
-	result, iterations, duration := data.StartValidation(normalSizeBoard)
-
-	tileSlice := make([]*data.Tile, 0, len(result))
-	for tile := range result {
-		tileSlice = append(tileSlice, tile)
-	}
-
-	ports := data.GeneratePorts(9)
-
-	response := BoardResponse{
-		Tiles:      tileSlice,
-		Ports:      ports,
-		Iterations: iterations,
-		Duration:   duration.String(),
-	}
-
-	jsonData, err := json.MarshalIndent(response, "", "  ")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
 }

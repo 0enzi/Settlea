@@ -1,9 +1,9 @@
 package edge
 
 type Edge struct {
-	q         int
-	r         int
-	direction string
+	Q         int
+	R         int
+	Direction string
 }
 
 const (
@@ -13,9 +13,9 @@ const (
 )
 
 func NewEdge(q, r int, dir string) *Edge {
-	return &Edge{q: q, r: r, direction: dir}
+	return &Edge{Q: q, R: r, Direction: dir}
 }
 
 func (e Edge) IsValid() bool {
-	return e.direction == NorthEast || e.direction == NorthWest || e.direction == West
+	return e.Direction == NorthEast || e.Direction == NorthWest || e.Direction == West
 }
