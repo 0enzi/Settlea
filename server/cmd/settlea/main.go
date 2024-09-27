@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"settlea/pkg/chat"
-	"settlea/pkg/game/data"
+	"settlea/internal/chat"
+	"settlea/internal/game/data"
 )
 
 type Config struct {

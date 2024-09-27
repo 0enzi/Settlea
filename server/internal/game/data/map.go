@@ -22,7 +22,7 @@ type SettleaMap struct {
 	Edges    utils.Set[*edge.Edge]
 }
 
-func (s *SettleaMap) NewMap(style string) SettleaMap {
+func (s *SettleaMap) NewMap(style string) *SettleaMap {
 	switch style {
 	case "base":
 		return s.setupMap(base_layout)
@@ -33,7 +33,7 @@ func (s *SettleaMap) NewMap(style string) SettleaMap {
 
 }
 
-func (s *SettleaMap) setupMap(layout grid.Layout) SettleaMap {
+func (s *SettleaMap) setupMap(layout grid.Layout) *SettleaMap {
 	tiles := GenerateHexagonMap(2)
 	vertices := GenerateVertices(layout, tiles)
 	edges := GenerateEdges(layout, tiles)
@@ -41,7 +41,7 @@ func (s *SettleaMap) setupMap(layout grid.Layout) SettleaMap {
 	// Run StartValidation to assign tokens and get a valid configuration
 	validTiles, _, _ := StartValidation(tiles)
 
-	return SettleaMap{
+	return &SettleaMap{
 		layout,
 		validTiles,
 		vertices,
