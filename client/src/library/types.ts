@@ -14,7 +14,6 @@ export interface PortData {
 
 export interface PortRender {
   exchangeRate: {
-    // text: PIXI.Text;
     text: string;
     coord: [number, number];
   };
