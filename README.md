@@ -12,9 +12,9 @@ Settlea.org
 [![Python version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue)](https://conventionalcommits.org)
 </div>
 
-<h3> Mock Design </h3>
+<h3> Progress </h3>
 
-![Mock](./public/ui_mock_1.png)
+![Progress](./public/progress.png)
 
 
 # Join Our Discord
