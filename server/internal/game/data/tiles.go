@@ -37,12 +37,7 @@ type Board struct {
 	Tiles utils.Set[Tile]
 }
 
-<<<<<<< Updated upstream
 func NewBoard(N int) []*Tile {
-=======
-func NewBoard(N int, layout grid.Layout) []*Tile {
->>>>>>> Stashed changes
-
 	settleaMap := GenerateHexagonMap(N)
 
 	return settleaMap
@@ -212,10 +207,6 @@ func GenerateCorners(layout grid.Layout, vertices []*vertex.Vertex) []*Corner {
 	for _, v := range vertices {
 		corner := &Corner{
 			Vertex:    *v,
-<<<<<<< Updated upstream
-			Coords:    layout.VertexToPixel(*v),
-=======
->>>>>>> Stashed changes
 			Structure: nil,
 			IsPort:    false,
 			PortType:  "",

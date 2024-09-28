@@ -14,6 +14,7 @@ export async function loadAllAssets() {
     { alias: "wheat_tile", src: "assets/tiles/wheat.png" },
     { alias: "ore_tile", src: "assets/tiles/ore.png" },
     { alias: "desert_tile", src: "assets/tiles/desert.png" },
+    { alias: "settlea_red", src: "assets/structures/settlea_red.svg" },
   ];
 
   assets.forEach(({ alias, src }) => PIXI.Assets.add({ alias, src }));

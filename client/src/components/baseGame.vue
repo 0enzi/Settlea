@@ -1,18 +1,22 @@
 <template>
-  <div class="baseGame"></div>
+  <div class="container">
+    <div class="baseGame"></div>
+    <TemplateC class="overlay" />
+  </div>
 </template>
 
 <script lang="ts">
 import { Application } from "pixi.js";
 import { init } from "../scripts/game";
-// import { ApiClient } from "../library/api";
+import TemplateC from "./templateC.vue";
 
 export default {
   name: "BaseGame",
+  components: { TemplateC },
+
   data() {
     return {
       app: new Application(),
-      // api: new ApiClient("http://127.0.0.1:8000/"),
     };
   },
   async mounted() {
@@ -20,3 +24,17 @@ export default {
   },
 };
 </script>
+
+<style>
+.container {
+  position: static;
+}
+
+/* .baseGame canvas, */
+.overlay {
+  position: absolute;
+}
+canvas {
+  border: 1px solid black;
+}
+</style>

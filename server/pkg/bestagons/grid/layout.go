@@ -16,27 +16,6 @@ type Layout struct {
 	Origin      screen.ScreenCoord
 }
 
-<<<<<<< Updated upstream
-=======
-func (l Layout) HexToPixel(h hex.Hex) screen.ScreenCoord {
-	M := l.Orientation
-
-	x := (M.ForwardMatrix[0][0]*float64(h.Q) + M.ForwardMatrix[0][1]*float64(h.R)) * float64(l.Size.X)
-	y := (M.ForwardMatrix[1][0]*float64(h.Q) + M.ForwardMatrix[1][1]*float64(h.R)) * float64(l.Size.Y)
-
-	return screen.MakeScreenCoord(x+float64(l.Origin.X), y+float64(l.Origin.Y))
-}
-
-/*
-Point hex_to_pixel(Layout layout, Hex h) {
-    const Orientation& M = layout.orientation;
-    double x = (M.f0 * h.q + M.f1 * h.r) * layout.size.x;
-    double y = (M.f2 * h.q + M.f3 * h.r) * layout.size.y;
-    return Point(x + layout.origin.x, y + layout.origin.y);
-}
-*/
-
->>>>>>> Stashed changes
 func (l Layout) VertexToPixel(v vertex.Vertex) screen.ScreenCoord {
 	q, r, direction := float64(v.Q), float64(v.R), v.Direction
 

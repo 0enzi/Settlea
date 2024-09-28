@@ -1,11 +1,93 @@
 import * as PIXI from "pixi.js";
-import { Hex, Layout, Orientation, Point, hexToPixel } from "@/library/Hex";
+import {
+  Hex,
+  Layout,
+  Orientation,
+  Point,
+  hexToPixel,
+  vertexToPixel,
+} from "@/library/Hex";
 
-import type { HexTile, PortData, PortRender } from "@/library/types";
+import type { Corner, HexTile, PortData, PortRender } from "@/library/types";
 import config from "@/config";
 
+let currentContainer: PIXI.Container | null = null;
+
+function drawSquare(
+  container: PIXI.Container,
+  cornerContainer: PIXI.Container,
+  texture: PIXI.Texture
+): void {
+  const settlePopup = new PIXI.Container();
+  settlePopup.interactive = true;
+  settlePopup.cursor = "pointer";
+  // settlePopup.x = cornerContainer.position.x;
+  // settlePopup.y = cornerContainer.position.y;
+
+  const point = cornerContainer.position;
+
+  const coords = {
+    x: point.x - 40,
+    y: point.y - 120,
+  };
+  const square = new PIXI.Graphics();
+  const structureSprite = PIXI.Sprite.from(texture);
+  structureSprite.position.set(coords.x + 15, coords.y + 10);
+  structureSprite.scale.set(0.25);
+
+  square.roundRect(coords.x, coords.y, 80, 80);
+  square.fill(0xf8f2dc);
+  square.stroke({ width: 5, color: 0x1d5d64 });
+
+  currentContainer = settlePopup;
+
+  settlePopup.on("mouseover", () => {
+    if (currentContainer) {
+      // odd bug where settlePop container freaks out and gets sent to the origin so i went w this :c
+      structureSprite.position.set(coords.x + 20, coords.y + 20);
+      structureSprite.scale.set(0.2);
+      square.clear();
+      square.roundRect(coords.x + 5, coords.y + 10, 70, 70);
+      square.fill(0xf8f2dc);
+      square.stroke({ width: 5, color: 0x1d5d64 });
+    }
+  });
+
+  settlePopup.on("mouseout", () => {
+    if (currentContainer) {
+      structureSprite.position.set(coords.x + 15, coords.y + 10);
+      structureSprite.scale.set(0.25);
+      square.clear();
+      square.roundRect(coords.x, coords.y, 80, 80);
+      square.fill(0xf8f2dc);
+      square.stroke({ width: 5, color: 0x1d5d64 });
+    }
+  });
+
+  settlePopup.on("click", () => {
+    if (currentContainer) {
+      console.log("clicked on");
+      removeCurrentSquare(container);
+    }
+  });
+
+  settlePopup.addChild(square);
+  settlePopup.addChild(structureSprite);
+  container.addChild(settlePopup);
+}
+
+function removeCurrentSquare(container: PIXI.Container): void {
+  if (currentContainer) {
+    container.removeChild(currentContainer);
+    currentContainer.destroy();
+    currentContainer = null;
+  }
+}
+
 export async function generateMap(
+  app: PIXI.Application,
   hexMap: HexTile[],
+  hexCorners: Corner[],
   ports: Record<string, PortData>,
   layoutPointy: Orientation,
   textures: Record<string, PIXI.Texture>,
@@ -52,6 +134,9 @@ export async function generateMap(
     randTile.anchor.set(0.5);
     randTile.position.set(tileCenter.x, tileCenter.y);
     randTile.scale.set(0.47);
+
+    tileContainer.interactive = true;
+
     tileContainer.addChild(randTile);
 
     if (hex.Type !== "desert") {
@@ -84,6 +169,10 @@ export async function generateMap(
     }
 
     container.addChild(tileContainer);
+
+    tileContainer.on("click", () => {
+      removeCurrentSquare(container);
+    });
   }
 
   const portTextures: Record<string, PIXI.Sprite> = {
@@ -114,6 +203,69 @@ export async function generateMap(
   for (const portName in portMappings) {
     addPorts(portMappings[portName], container);
   }
+
+  const cornerContainers: PIXI.Container[] = [];
+  for (const corner of hexCorners) {
+    const point = vertexToPixel(layout, corner);
+    const circle = new PIXI.Graphics();
+    const cornerContainer = new PIXI.Container();
+    const drawCirc = (alpha: number) => {
+      circle.clear();
+      circle.circle(0, 0, 21);
+      circle.fill({ color: 0xffffff, alpha: alpha });
+      circle.stroke({ color: 0x000 });
+    };
+    cornerContainer.interactive = true;
+    cornerContainer.cursor = "pointer";
+
+    drawCirc(0.2);
+
+    cornerContainer.position.set(point.x, point.y);
+    cornerContainer.addChild(circle);
+
+    cornerContainers.push(cornerContainer);
+    container.addChild(cornerContainer);
+
+    cornerContainer.on("mouseover", () => {
+      drawCirc(0.8);
+    });
+
+    cornerContainer.on("mouseout", () => {
+      drawCirc(0.2);
+    });
+
+    cornerContainer.on("click", () => {
+      removeCurrentSquare(container);
+      drawSquare(container, cornerContainer, textures["settlea_red"]);
+    });
+
+    container.on("click", (e) => {
+      //   removeCurrentSquare(container);
+      console.log("click in", container.uid, cornerContainer.uid);
+      e.stopPropagation();
+    });
+  }
+
+  const minScale = 0.8;
+  const maxScale = 1.2;
+  const scaleSpeed = 0.008;
+
+  app.ticker.add(() => {
+    cornerContainers.forEach((container) => {
+      if (!("scaleDirection" in container)) {
+        (container as any).scaleDirection = 1;
+      }
+
+      const scaleDirection = (container as any).scaleDirection;
+
+      container.scale.x += scaleDirection * scaleSpeed;
+      container.scale.y += scaleDirection * scaleSpeed;
+
+      if (container.scale.x >= maxScale || container.scale.x <= minScale) {
+        (container as any).scaleDirection *= -1;
+      }
+    });
+  });
 
   container.addChild(graphics);
 }
