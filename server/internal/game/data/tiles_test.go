@@ -9,6 +9,7 @@ import (
 )
 
 func TestGenerateHexagonalMap(t *testing.T) {
+
 	hex_map := GenerateHexagonMap(2)
 
 	map_size := len(hex_map)
@@ -20,7 +21,7 @@ func TestGenerateHexagonalMap(t *testing.T) {
 }
 
 func TestValidateTiles(t *testing.T) {
-	// Generate the hexagon map with N = 2
+
 	tiles := GenerateHexagonMap(2)
 
 	// Run StartValidation to assign tokens and get a valid configuration
@@ -35,14 +36,13 @@ func TestValidateTiles(t *testing.T) {
 }
 
 func TestGenerateVertices(t *testing.T) {
-	tiles := GenerateHexagonMap(2)
 
 	layout := grid.Layout{
 		Orientation: orientation.MakeOrientation(orientation.PointyLayout), // kinda redundant since all layouts will b pointy
 		Origin:      screen.MakeScreenCoord(0, 0),
 		Size:        screen.MakeScreenCoord(92, 92),
 	}
-
+	tiles := GenerateHexagonMap(2)
 	vertices := GenerateVertices(layout, tiles)
 
 	expected_len := 54

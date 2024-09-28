@@ -7,10 +7,15 @@ import { generateMap, setupBackground, centerCanvas } from "./map/renderMap";
 import { loadAllAssets } from "./map/utils";
 import { ApiClient } from "@/library/api";
 import config from "@/config";
-import { polygonCorners, Orientation, Point, Layout } from "@/library/Hex";
+import { Orientation, Point, Layout, vertexToPixel } from "@/library/Hex";
 
 // types
-import type { HexTile, TileAPIResponse, PortData } from "@/library/types";
+import type {
+  HexTile,
+  Corner,
+  TileAPIResponse,
+  PortData,
+} from "@/library/types";
 
 export async function init(ctx: any): Promise<void> {
   let app: PIXI.Application = ctx.app;
@@ -51,19 +56,20 @@ export async function init(ctx: any): Promise<void> {
       });
 
     const hexMap: HexTile[] = response.tiles;
+    const hexCorners: Corner[] = response.corners;
     const ports: Record<string, PortData> = response.ports;
-    console.log(response);
 
     setupBackground(textures["background"], container);
     centerCanvas(app);
     generateMap(hexMap, ports, layoutPointy, textures, container);
-    placeStructures(hexMap, layoutPointy, container);
+    placeStructures(hexMap, hexCorners, layoutPointy, container);
 
     app.stage.addChild(container);
   }
 
   function placeStructures(
     hexMap: HexTile[],
+    hexCorners: Corner[],
     layoutPointy: Orientation,
     container: PIXI.Container
   ): void {
@@ -76,23 +82,10 @@ export async function init(ctx: any): Promise<void> {
         (config.height * window.devicePixelRatio) / 2
       )
     );
-    console.log(
-      (config.width * window.devicePixelRatio) / 2,
-      (config.height * window.devicePixelRatio) / 2
-    );
-    for (const hex of hexMap) {
-      polygonCorners(layout, hex).forEach((point: Point) => {
-        const roundedX = Math.round(point.x * 1000) / 1000;
-        const roundedY = Math.round(point.y * 1000) / 1000;
-        const pointKey = `${roundedX},${roundedY}`;
-        uniquePoints.add(pointKey);
-      });
-    }
 
     const cornerContainers: PIXI.Container[] = [];
-
-    uniquePoints.forEach((pointKey) => {
-      const point = pointKey.split(",").map((x) => parseInt(x));
+    for (const corner of hexCorners) {
+      const point = vertexToPixel(layout, corner);
       const circle = new PIXI.Graphics();
       const cornerContainer = new PIXI.Container();
       const drawCirc = (alpha: number) => {
@@ -106,7 +99,7 @@ export async function init(ctx: any): Promise<void> {
 
       drawCirc(0.2);
 
-      cornerContainer.position.set(point[0], point[1]);
+      cornerContainer.position.set(point.x, point.y);
       cornerContainer.addChild(circle);
       container.addChild(cornerContainer);
       cornerContainers.push(cornerContainer);
@@ -120,11 +113,10 @@ export async function init(ctx: any): Promise<void> {
       });
 
       cornerContainer.on("click", () => {
-        console.log("clicked on ", pointKey);
+        console.log("clicked on ", corner);
       });
-    });
+    }
 
-    // const scaleDirection = 1;
     const minScale = 0.8;
     const maxScale = 1.2;
     const scaleSpeed = 0.008;

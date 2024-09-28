@@ -32,6 +32,28 @@ export interface HexTile {
   S: number;
   Type: ResourceType;
   Token: number;
+  Blocked: boolean;
+  Coords: ScreenCoord;
+}
+
+export interface Structure {
+  Type: string;
+  OwnerId: number;
+}
+
+export interface Corner {
+  Q: number;
+  R: number;
+  Direction: string;
+  Coords: ScreenCoord;
+  Structure: Structure | null;
+  IsPort: boolean;
+  PortType: string;
+}
+
+export interface ScreenCoord {
+  X: number;
+  Y: number;
 }
 
 export interface HexMap {
@@ -40,7 +62,10 @@ export interface HexMap {
 
 export interface TileAPIResponse {
   tiles: HexTile[];
+  corners: Corner[];
+  // edges: Edge[];
   ports: Record<string, PortData>;
+
   iterations: number;
   duration: string;
 }

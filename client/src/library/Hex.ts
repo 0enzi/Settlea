@@ -2,6 +2,7 @@
 
 import { HexTile } from "./types";
 
+const SQRT_3_2 = 0.8660254037844386;
 // hexagons are the bestagons 😻
 export class Hex {
   private static readonly DIRECTIONS: [number, number, number][] = [
@@ -72,6 +73,12 @@ export class Hex {
   }
 }
 
+export type Vertex = {
+  Q: number;
+  R: number;
+  Direction: string;
+};
+
 export class Point {
   constructor(
     public x: number,
@@ -131,21 +138,28 @@ export function hexToPixel(layout: Layout, h: Hex | HexTile): Point {
   const M = layout.orientation.forwardMatrix;
   const x = (M[0][0] * h.Q + M[0][1] * h.R) * layout.size.x;
   const y = (M[1][0] * h.Q + M[1][1] * h.R) * layout.size.y;
+
   return new Point(x + layout.origin.x, y + layout.origin.y);
 }
 
 export function hexCornerOffset(layout: Layout, corner: number): Point {
   const size = layout.size;
   const angle = (2.0 * Math.PI * (layout.orientation.startAngle + corner)) / 6;
+
   return new Point(size.x * Math.cos(angle), size.y * Math.sin(angle));
 }
 
-export function polygonCorners(layout: Layout, h: Hex | HexTile): Point[] {
-  const corners: Point[] = [];
-  const center = hexToPixel(layout, h);
-  for (let i = 0; i < 6; i++) {
-    const offset = hexCornerOffset(layout, i);
-    corners.push(new Point(center.x + offset.x, center.y + offset.y));
+export function vertexToPixel(layout: Layout, v: Vertex): Point {
+  const M = layout.orientation.forwardMatrix;
+
+  const x = (M[0][0] * v.Q + M[0][1] * v.R) * layout.size.x;
+  let y = (M[1][0] * v.Q + M[1][1] * v.R) * layout.size.y;
+
+  if (v.Direction === "S") {
+    y += layout.size.y;
+  } else {
+    y -= layout.size.y;
   }
-  return corners;
+
+  return new Point(x + layout.origin.x, y + layout.origin.y);
 }

@@ -71,8 +71,7 @@ func handleCORS(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 }
 
-// RegisterGameRoutes registers game-related routes
 func RegisterGameRoutes(router *mux.Router) {
-	// Route for generating a new board
+
 	router.HandleFunc("/game/generate-base-board", newGame).Methods("GET", "OPTIONS")
 }

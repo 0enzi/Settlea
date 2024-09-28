@@ -95,10 +95,8 @@ export async function generateMap(
   };
 
   const portMappings: Record<string, PortRender> = {};
-  console.log(ports);
 
   for (const [key, value] of Object.entries(ports)) {
-    console.log(value["exchangeRate"]);
     portMappings[key] = {
       exchangeRate: {
         text: value.exchangeRate.text.toString(),
