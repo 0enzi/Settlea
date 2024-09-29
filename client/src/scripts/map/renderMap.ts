@@ -21,8 +21,6 @@ function drawSquare(
   const settlePopup = new PIXI.Container();
   settlePopup.interactive = true;
   settlePopup.cursor = "pointer";
-  // settlePopup.x = cornerContainer.position.x;
-  // settlePopup.y = cornerContainer.position.y;
 
   const point = cornerContainer.position;
 
@@ -44,10 +42,10 @@ function drawSquare(
   settlePopup.on("mouseover", () => {
     if (currentContainer) {
       // odd bug where settlePop container freaks out and gets sent to the origin so i went w this :c
-      structureSprite.position.set(coords.x + 20, coords.y + 20);
-      structureSprite.scale.set(0.2);
+      // structureSprite.position.set(coords.x + 18, coords.y + 20);
+      // structureSprite.scale.set(0.23);
       square.clear();
-      square.roundRect(coords.x + 5, coords.y + 10, 70, 70);
+      square.roundRect(coords.x + 7.5, coords.y + 5, 75, 75);
       square.fill(0xf8f2dc);
       square.stroke({ width: 5, color: 0x1d5d64 });
     }
@@ -215,6 +213,7 @@ export async function generateMap(
       circle.fill({ color: 0xffffff, alpha: alpha });
       circle.stroke({ color: 0x000 });
     };
+
     cornerContainer.interactive = true;
     cornerContainer.cursor = "pointer";
 
