@@ -17,18 +17,22 @@ Settlea.org (In Development ~20%)
 ![Progress](./public/progress.png)
 
 # Description
+
 - This is the source for [Settlea.org](https://settlea.org), a free and open source alternative to the popular board game Settlers of Catan.
 - This project has no affiliation with, or endorsed by Catan, Klaus Teuber or any of their subsidiaries or affiliates.
 - The client is written in Typescript, PixiJS for the graphics and VUEJS for the rest of the frontend.
-- The server is written in [Go](https://go.dev/) and can be found in the [server](https://github.com/0enzi/Settlea/server) folder.
+- The server is written in [Go](https://go.dev/) and can be found in the [server](https://github.com/0enzi/Settlea/tree/main/server) folder.
 
 
 # Join Our Discord
+
 [TBA](https://discord.gg/fAzzECHm)
 </a>
 
 # Installation
+
 Instructions on how to setup the project locally can be found [here](https://github.com/0enzi/Settlea/wiki/Installation).
 
 # Roadmap
+
 List of features implemented and planned for the project can be found [here](https://github.com/0enzi/Settlea/wiki/Roadmap).
