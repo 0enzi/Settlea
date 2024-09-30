@@ -72,6 +72,6 @@ func handleCORS(w http.ResponseWriter, r *http.Request) {
 }
 
 func RegisterGameRoutes(router *mux.Router) {
-
 	router.HandleFunc("/game/generate-base-board", newGame).Methods("GET", "OPTIONS")
+	
 }
