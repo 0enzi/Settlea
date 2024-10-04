@@ -19,7 +19,7 @@ type Game struct {
 func (g *Game) InitGame(players_no int, discardLimit int, vpsToWin int, style string, ports map[string]data.PortData) *Game {
 	players := make([]data.Player, players_no)
 	settleaMap := &data.SettleaMap{}
-	gameID := uid.NewGameID()
+	gameID := uid.GenerateUniqueID(13)
 
 	return &Game{
 		gameID,

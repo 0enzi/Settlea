@@ -5,7 +5,7 @@ import (
 )
 
 func TestGenerateGameID(t *testing.T) {
-	uid, err := GenerateGameID(12)
+	uid, err := MustGenerateID(12)
 	if err != nil {
 		t.Errorf("Should not return error, but got %v", err)
 	}

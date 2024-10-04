@@ -14,9 +14,8 @@ func NewRouter() *mux.Router {
 
 	// Apply CORS middleware globally
 	router.Use(handlers.CORSMiddleware)
-
 	routes.RegisterGameRoutes(router)
-	routes.RegisterChatRoutes(router)
+	routes.RegisterWSRoutes(router)
 
 	return router
 }

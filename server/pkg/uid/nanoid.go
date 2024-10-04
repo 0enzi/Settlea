@@ -10,7 +10,7 @@ var defaultAlphabet = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN
 
 const defaultIDSize = 12
 
-func GenerateGameID(size int) (string, error) {
+func MustGenerateID(size int) (string, error) {
 	if size <= 0 {
 		return "", errors.New("size must be a positive integer")
 	}
@@ -28,10 +28,12 @@ func GenerateGameID(size int) (string, error) {
 	return string(id), nil
 }
 
-func NewGameID() string {
-	id, err := GenerateGameID(defaultIDSize)
+func GenerateUniqueID(size int) string {
+	id, err := MustGenerateID(size)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return id
+
 }
