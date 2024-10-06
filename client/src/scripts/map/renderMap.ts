@@ -91,6 +91,14 @@ export async function generateMap(
   textures: Record<string, PIXI.Texture>,
   container: PIXI.Container
 ): Promise<void> {
+  // Fonts
+  PIXI.Assets.addBundle("fonts", [
+    { alias: "Bungee", type: "font", src: "assets/fonts/bungee.woff2" },
+    { alias: "Rubik", type: "font", src: "assets/fonts/rubik.woff2" },
+  ]);
+
+  await PIXI.Assets.loadBundle("fonts");
+
   const map: Set<Hex> = new Set();
   const N = 2;
 
@@ -297,7 +305,7 @@ export function addPorts(
   } else {
     const typeText = new PIXI.Text({
       text: portData.portType.text,
-      style: { fontFamily: "Rubik", fontWeight: "bold" },
+      style: { fontFamily: "Rubik" },
     });
 
     typeText.x = portData.portType.coord[0];
