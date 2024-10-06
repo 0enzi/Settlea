@@ -11,6 +11,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type ResponseMessage struct {
+	Type    string `json:"type"`
+	Message string `json:"message"`
+}
+
 const (
 	// Time allowed to write a message to the peer.
 	writeWait = 10 * time.Second
@@ -52,6 +57,7 @@ type Client struct {
 
 func (client *Client) handleNewMessage(jsonMessage []byte) {
 	var msg Message
+
 	if err := json.Unmarshal(jsonMessage, &msg); err != nil {
 		log.Println("Error unmarshalling message:", err)
 		return
@@ -61,7 +67,7 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 		client.Name = msg.Sender.Name
 		// log.Println("Client Name: ", client.Name)
 		log.Printf("Handling msg: \n Action -> %v; \n Data -> '%v'; \n Target -> %v; \n Sender -> %v",
-			msg.Action, msg.Data, msg.Target.Name, msg.Sender.Name)
+			msg.Action, msg.Data, msg.Target.ID, msg.Sender.Name)
 	} else {
 		log.Printf("Sender is nil")
 	}
@@ -69,6 +75,8 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 	msg.Sender = client
 
 	switch msg.Action {
+	case CreateRoomAction:
+		client.createAndNotifyRoom(msg.Data)
 
 	case JoinRoomAction:
 		client.joinRoom(msg.Data)
@@ -77,6 +85,7 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 		client.leaveRoom(msg.Data)
 
 	case SendMessageAction:
+
 		client.sendMessage(msg)
 
 	case PingAction:
@@ -89,16 +98,18 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 
 // actions
 func (client *Client) joinRoom(roomID string) *Room {
+	log.Println("Joining room", roomID)
 	room := client.hub.findRoomByID(roomID)
 	if roomID == "" {
 		room = client.hub.createRoom(uid.GenerateUniqueID(15))
 	}
 
 	if room == nil {
-		room = client.hub.createRoom(uid.GenerateUniqueID(15))
+		room = client.hub.createRoom(roomID)
 	}
 
 	if !client.isInRoom(room) {
+
 		client.rooms[room] = true
 		room.register <- client
 		client.notifyRoomJoined(room)
@@ -125,7 +136,14 @@ func (client *Client) sendMessage(message Message) {
 }
 
 func (client *Client) sendPong() {
-	client.conn.WriteJSON(`{"type":"pong"}`)
+
+	pongMsg := &Message{
+		Action: "pong",
+		Data:   "",
+		Target: nil,
+		Sender: client,
+	}
+	client.send <- pongMsg.encode()
 }
 
 func (client *Client) isInRoom(room *Room) bool {
@@ -134,7 +152,6 @@ func (client *Client) isInRoom(room *Room) bool {
 }
 
 func (client *Client) notifyRoomJoined(room *Room) {
-	log.Printf("Client %s joined room %s", client.Name, room.GetID())
 	message := &Message{
 		Action: UserJoinAction,
 		Data:   room.ID,
@@ -146,7 +163,6 @@ func (client *Client) notifyRoomJoined(room *Room) {
 }
 
 func (client *Client) notifyRoomLeft(room *Room) {
-	log.Printf("Client %s left room %s", client.Name, room.GetID())
 	message := &Message{
 		Action: UserLeaveAction,
 		Data:   room.ID,
@@ -155,6 +171,27 @@ func (client *Client) notifyRoomLeft(room *Room) {
 	}
 
 	client.send <- message.encode()
+}
+
+func (client *Client) createAndNotifyRoom(roomID string) {
+	room := client.createRoom(roomID)
+
+	message := &Message{
+		Action: CreateRoomAction,
+		Data:   room.ID,
+		Target: room,
+		Sender: client,
+	}
+	client.send <- message.encode()
+}
+
+func (client *Client) createRoom(roomID string) *Room {
+
+	if roomID == "" {
+		roomID = uid.GenerateUniqueID(15)
+	}
+	room := client.hub.createRoom(roomID)
+	return room
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -237,7 +274,16 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client := &Client{
+		hub:   hub,
+		rooms: make(map[*Room]bool),
+		conn:  conn,
+		send:  make(chan []byte, 256),
+
+		// TODO client specific properties
+		ID:   uid.GenerateUniqueID(15),
+		Name: "",
+	}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in

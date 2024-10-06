@@ -27,7 +27,6 @@ func (hub *Hub) MonitorClientsChannel() {
 		select {
 		case message := <-hub.broadcast:
 			for client := range hub.clients {
-				log.Printf("96%v", len(hub.rooms))
 				client.send <- message.encode()
 			}
 		case client := <-hub.register:
@@ -78,6 +77,7 @@ func (h *Hub) findRoomByID(id string) *Room {
 }
 
 func (hub *Hub) createRoom(id string) *Room {
+	log.Println("Creating room", id)
 	room := NewRoom(id)
 	go room.RunRoom()
 	hub.rooms[room] = true

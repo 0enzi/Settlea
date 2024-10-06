@@ -1,48 +1,40 @@
 package main
 
 import (
+	_ "embed"
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"os"
-	"path/filepath"
 	"settlea/api"
 )
 
 type Config struct {
 	AllowedOrigins []string `json:"allowed_origins"`
+	Port           int      `json:"port"`
 }
 
 var config Config
 
-func loadConfig(filename string) error {
-	// Get the absolute path to the config file
-	absPath, err := filepath.Abs(filename)
-	if err != nil {
-		return err
-	}
+//go:embed config/config.json
+var configFile []byte
 
-	data, err := os.ReadFile(absPath) // Use os.ReadFile instead of ioutil
-	if err != nil {
-		return err
-	}
+func loadConfig() error {
 
-	return json.Unmarshal(data, &config)
+	return json.Unmarshal(configFile, &config)
 }
 
 func main() {
-	err := loadConfig("config/config.json") // Update the path to your config file
+
+	err := loadConfig()
 	if err != nil {
 		slog.Error("Error loading config: " + err.Error())
 		return
 	}
 
-	// Create the router
 	router := api.NewRouter()
 
-	// Start the server
 	slog.Info("Server started on port 8080")
-	err = http.ListenAndServe(":8080", router) // Use the router for the server
+	err = http.ListenAndServe(":8080", router)
 	if err != nil {
 		slog.Error("Error starting server: " + err.Error())
 	}

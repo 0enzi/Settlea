@@ -1,9 +1,12 @@
 package ws
 
 import (
+	"fmt"
 	"log"
 	"settlea/pkg/uid"
 )
+
+var welcomeMsg = "%s has joined the room"
 
 type Room struct {
 	ID            string `json:"id"`
@@ -55,16 +58,53 @@ func (room *Room) RunRoom() {
 			close(room.broadcast)
 			return
 		case msg := <-room.broadcast:
+			log.Println("BROOO")
+			log.Println(room.GetRoomSize(), len(room.clients))
 			for client := range room.clients {
 				client.send <- msg.encode()
+				log.Printf("Sending message to client %s", client.ID)
 			}
 
 		case client := <-room.register:
 			log.Println("Registering client", client.ID)
 			log.Println(room.GetRoomSize(), len(room.clients))
 
+			room.notifyClientJoined(client)
+			room.clients[client] = true
+			log.Printf("%v size", room.GetRoomSize())
+
 			// TODO check if room is full and enter spectator mode
+
+		case client := <-room.unregister:
+			delete(client.rooms, room)
+			delete(room.clients, client)
+			close(client.send)
 
 		}
 	}
+}
+
+func (room *Room) notifyClientJoined(client *Client) {
+	if client == nil {
+		log.Println("Client is nil")
+		return
+	}
+
+	clientName := client.Name
+
+	if clientName == "" {
+		clientName = client.ID
+	}
+
+	msg := &Message{
+		Action: SendMessageAction,
+		Target: room,
+		Data:   fmt.Sprintf(welcomeMsg, clientName),
+	}
+
+	log.Println(client.ID, "joined room", room.ID)
+	for client := range room.clients {
+		client.send <- msg.encode()
+	}
+
 }

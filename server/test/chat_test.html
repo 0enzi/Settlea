@@ -214,6 +214,11 @@
         user3: { name: "Charlie", colorClass: "user3" },
       };
 
+      const testRoom = {
+        id: "testID",
+        name: "testRoom",
+      };
+
       let currentUser = users.user1; // Simulating Alice as the current user
       currentUser.name += Math.floor(Math.random() * 100); // Add a random number to Alice's name
       const messageInput = document.getElementById("message-input");
@@ -236,9 +241,9 @@
             "status-connected"
           );
 
-          const joinMessage = {
-            action: "join_room",
-            data: "",
+          const createRoomMessage = {
+            action: "create_room",
+            data: "testID",
             target: {
               id: "general",
               name: "general",
@@ -248,11 +253,22 @@
               name: currentUser.name,
             },
           };
-          ws.send(JSON.stringify(joinMessage));
+          ws.send(JSON.stringify(createRoomMessage));
 
           // setInterval(() => {
           //   lastPingTime = Date.now();
-          //   const pingMessage = { type: "ping" };
+          //   const pingMessage = {
+          //     action: "ping",
+          //     data: "",
+          //     target: {
+          //       id: "general",
+          //       name: "general",
+          //     },
+          //     sender: {
+          //       id: currentUser.name,
+          //       name: currentUser.name,
+          //     },
+          //   };
           //   ws.send(JSON.stringify(pingMessage));
           // }, 5000);
         };
@@ -260,23 +276,37 @@
         ws.onmessage = function (event) {
           try {
             const message = JSON.parse(event.data);
-            console.log(message);
+            console.log("Rec", message);
+            console.log("Rec", message.action);
 
-            if (message.type === "pong") {
+            if (message.action === "pong") {
               const ping = Date.now() - lastPingTime;
               pingElement.innerText = `Ping: ${ping} ms`;
-            } else if (message.type === "join" || message.type === "leave") {
+            } else if (message.action === "create_room") {
+              const joinMessage = {
+                action: "join_room",
+                data: testRoom.id,
+                target: {
+                  ID: "testID",
+                  Name: "",
+                },
+                sender: {
+                  id: currentUser.name,
+                  name: currentUser.name,
+                },
+              };
+              ws.send(JSON.stringify(joinMessage));
+            } else if (
+              message.action === "join" ||
+              message.action === "leave"
+            ) {
               displaySystemMessage(message.message); // Optionally show a system message
               console.log("User join or leave detected:", message); // Check if join/leave are detected
-            } else if (message.type === "chat") {
+            } else if (message.action === "send_message") {
               displayMessage(
-                message.username in users
-                  ? users[message.username]
-                  : { name: message.username, colorClass: "user1" },
-                message.message
+                { name: message.sender.name, colorClass: "user1" },
+                message.data
               );
-            } else {
-              console.log("Unknown message type:", message.type);
             }
           } catch (error) {
             console.error("Error processing message:", error);
@@ -300,14 +330,15 @@
           action: "send_message",
           data: message,
           target: {
-            id: "general",
-            name: "general",
+            id: "testID",
+            name: "",
           },
           sender: {
             id: currentUser.name,
             name: currentUser.name,
           },
         };
+
         ws.send(JSON.stringify(msg));
       }
 
