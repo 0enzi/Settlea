@@ -1,139 +1,183 @@
 <template>
-  <div>
-    <div class="tab">
+  <div id="chat-container">
+    <nav>
       <button
-        class="tablinks"
+        class="nav-button"
+        @click="activeTab = 'chat'"
         :class="{ active: activeTab === 'chat' }"
-        @click="openTab('chat')"
       >
         Chat
       </button>
       <button
-        class="tablinks"
-        :class="{ active: activeTab === 'logs' }"
-        @click="openTab('logs')"
+        class="nav-button"
+        @click="activeTab = 'log'"
+        :class="{ active: activeTab === 'log' }"
       >
-        Logs
+        Logs (10)
       </button>
-    </div>
+    </nav>
 
-    <div v-if="activeTab === 'chat'" class="tabcontent">
-      <h3>Game Chat</h3>
-      <div class="chat-window">
-        <div
-          v-for="message in chatMessages"
-          :key="message.id"
-          class="chat-message"
-        >
-          {{ message.text }}
-        </div>
+    <!-- Wrapper for content and input -->
+    <div class="chat-wrapper">
+      <!-- Conditionally render based on the active tab -->
+      <div v-if="activeTab === 'chat'" class="tab-content">
+        <TabChat />
       </div>
-      <input
-        v-model="newChatMessage"
-        @keyup.enter="sendChatMessage"
-        placeholder="Type your message..."
-      />
-    </div>
+      <div v-else-if="activeTab === 'log'" class="tab-content">
+        <TabLog />
+      </div>
 
-    <div v-if="activeTab === 'logs'" class="tabcontent">
-      <h3>Game Logs</h3>
-      <div class="logs-window">
-        <div v-for="log in gameLogs" :key="log.id" class="game-log">
-          {{ log.text }}
-        </div>
+      <!-- Chat input section appears only in the chat tab -->
+      <div class="chat-input" v-if="activeTab === 'chat'">
+        <input
+          v-model="message"
+          @keydown.enter="sendMessage"
+          type="text"
+          placeholder="Type a message..."
+          class="input-text"
+        />
+        <button @click="sendMessage" class="send-button">Send</button>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { ref } from "vue";
+import TabChat from "./TabChat.vue";
+import TabLog from "./TabLog.vue";
 
-interface ChatMessage {
-  id: number;
-  text: string;
-}
-
-interface GameLog {
-  id: number;
-  text: string;
-}
-
-export default defineComponent({
+export default {
   name: "ChatBox",
-  data() {
+  components: {
+    TabChat,
+    TabLog,
+  },
+  setup() {
+    const activeTab = ref("chat"); // 'chat' is the default tab
+    const message = ref(""); // Message input value
+
+    // Function to handle sending a message
+    const sendMessage = () => {
+      if (message.value.trim()) {
+        console.log("Sending message:", message.value);
+        message.value = ""; // Clear the input after sending
+      }
+    };
+
     return {
-      activeTab: "chat" as string,
-      newChatMessage: "" as string,
-      chatMessages: [] as ChatMessage[], // Specify type for chatMessages
-      gameLogs: [] as GameLog[], // Declare gameLogs
+      activeTab,
+      message,
+      sendMessage,
     };
   },
-  methods: {
-    openTab(tabName: string) {
-      this.activeTab = tabName; // Set the active tab to the clicked tab
-    },
-    sendChatMessage() {
-      if (this.newChatMessage.trim()) {
-        const newMessage: ChatMessage = {
-          id: Date.now(),
-          text: this.newChatMessage,
-        };
-        this.chatMessages.push(newMessage); // Add new message to the chat
-        this.newChatMessage = ""; // Clear input field
-        console.log("send chat message:", newMessage);
-      }
-    },
-    addLogEntry(logText: string) {
-      const newLog: GameLog = { id: Date.now(), text: logText }; // Create new log entry
-      this.gameLogs.push(newLog); // Add the new log entry
-      console.log("add log entry:", logText);
-    },
-  },
-});
+};
 </script>
 
-<style>
-.tab {
-  overflow: hidden;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
+<style scoped>
+#chat-container {
+  margin-top: 20px;
+  border-left: 4px solid #183a37;
+  border-top: 4px solid #183a37;
+  border-right: 4px solid #183a37;
+  border-radius: 10px 0px 0px 0px;
+  background-color: #f8f2dc;
+  width: 24%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 50vh; /* Set a height to enable scroll */
 }
 
-.tab button {
-  background-color: inherit;
-  float: left;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
+nav {
+  display: flex;
+  width: 100%;
 }
 
-.tab button:hover {
-  background-color: #ddd;
-}
-
-.tab button.active {
-  background-color: #ccc;
-}
-
-.tabcontent {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
-}
-
-.chat-window,
-.logs-window {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
+.nav-button {
+  width: 50%;
   padding: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  border: 0px;
+  text-align: left;
+  color: #183a37;
+  transition: background-color 0.2s ease;
+  font-family: "Londrina Solid", sans-serif;
+  background-color: #f8f2dc;
+  border-top-left-radius: 10px;
 }
 
-.chat-message,
-.game-log {
-  margin: 5px 0;
+.nav-button:hover {
+  background-color: #f5eccc;
+}
+
+.nav-button.active {
+  background-color: #e9d690;
+  border-bottom: 4px solid #183a37;
+}
+
+.nav-button.active:first-child {
+  border-top-left-radius: 10px;
+  border-right: 4px solid #183a37;
+}
+
+.nav-button.active:last-child {
+  border-top-left-radius: 0%;
+  border-left: 4px solid #183a37;
+}
+
+.chat-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Allow it to grow and fill the available space */
+  overflow: hidden; /* Prevent overflow */
+}
+
+.tab-content {
+  padding: 20px;
+  background-color: #f8f2dc;
+  font-family: "Outfit", sans-serif;
+  height: 100%; /* Take full height */
+  overflow-y: auto; /* Allow scrolling */
+}
+
+.chat-input {
+  display: flex;
+  padding: 1px;
+  background-color: #f5eccc;
+}
+
+.input-text {
+  font-family: "Outfit", sans-serif;
+  width: 80%;
+  margin-left: 5px;
+  padding-left: 10px;
+  border: none;
+  font-size: 16px;
+  outline: none;
+  border-radius: 10px;
+  border: 2px solid #183a37;
+  color: #177e89;
+}
+
+.input-text::placeholder {
+  color: #177e89;
+}
+
+.send-button {
+  width: 20%;
+  padding: 10px;
+  margin-left: 5px;
+  background-color: #183a37;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.send-button:hover {
+  background-color: #145a50;
 }
 </style>
