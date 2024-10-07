@@ -69,3 +69,30 @@ export interface TileAPIResponse {
   iterations: number;
   duration: string;
 }
+
+export interface Room {
+  id: string;
+  name: string;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+}
+
+export interface MessageResponse {
+  action: string;
+  data: string;
+  target: Room;
+  sender: Client;
+}
+
+/*
+type Message struct {
+	Action string  `json:"action"`
+	Data   string  `json:"data"`
+	Target *Room   `json:"target"`
+	Sender *Client `json:"sender"`
+}
+
+*/

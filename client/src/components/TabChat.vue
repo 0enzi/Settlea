@@ -5,12 +5,10 @@
 </template>
 
 <script>
-import MessageItem from "./messageItem.vue";
+import MessageItem from "./MessageItem.vue";
 
 export default {
   name: "TabChat",
-  components: {
-    MessageItem,
-  },
+  components: { MessageItem },
 };
 </script>

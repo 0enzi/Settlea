@@ -36,7 +36,9 @@
           placeholder="Type a message..."
           class="input-text"
         />
-        <button @click="sendMessage" class="send-button">Send</button>
+        <button @click="sendMessage" class="send-button">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -82,7 +84,7 @@ export default {
   border-right: 4px solid #183a37;
   border-radius: 10px 0px 0px 0px;
   background-color: #f8f2dc;
-  width: 24%;
+  width: 20%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -104,8 +106,9 @@ nav {
   color: #183a37;
   transition: background-color 0.2s ease;
   font-family: "Londrina Solid", sans-serif;
-  background-color: #f8f2dc;
-  border-top-left-radius: 10px;
+  background-color: #e9d690;
+
+  border-bottom: 4px solid #183a37;
 }
 
 .nav-button:hover {
@@ -113,18 +116,20 @@ nav {
 }
 
 .nav-button.active {
-  background-color: #e9d690;
-  border-bottom: 4px solid #183a37;
+  background-color: #f8f2dc;
+  border-bottom: 0px;
 }
 
 .nav-button.active:first-child {
   border-top-left-radius: 10px;
   border-right: 4px solid #183a37;
+  /* border-bottom: 0px; */
 }
 
 .nav-button.active:last-child {
   border-top-left-radius: 0%;
   border-left: 4px solid #183a37;
+  /* border-bottom: 0px; */
 }
 
 .chat-wrapper {
@@ -135,7 +140,9 @@ nav {
 }
 
 .tab-content {
-  padding: 20px;
+  padding-left: 10px;
+  padding-top: 5px;
+  padding-right: 5px;
   background-color: #f8f2dc;
   font-family: "Outfit", sans-serif;
   height: 100%; /* Take full height */
@@ -150,7 +157,7 @@ nav {
 
 .input-text {
   font-family: "Outfit", sans-serif;
-  width: 80%;
+  width: 85%;
   margin-left: 5px;
   padding-left: 10px;
   border: none;
@@ -166,9 +173,10 @@ nav {
 }
 
 .send-button {
-  width: 20%;
+  width: 15%;
   padding: 10px;
   margin-left: 5px;
+  margin-right: 5px;
   background-color: #183a37;
   color: #fff;
   border: none;

@@ -1,7 +1,12 @@
 <template>
   <div class="container">
-    <div class="baseGame">
+    <div class="baseGame prevent-select">
       <ChatBox class="chat-box" />
+      <StatusBox
+        class="status-box"
+        :connection-status="connectionStatus"
+        :ping="ping"
+      />
     </div>
   </div>
 </template>
@@ -9,21 +14,98 @@
 <script lang="ts">
 import { Application } from "pixi.js";
 import { init } from "../scripts/game";
-import ChatBox from "./chatBox.vue";
+
+import StatusBox from "./StatusBox.vue";
+import ChatBox from "./ChatBox.vue";
+
+import config from "@/config";
+import { nanoid } from "nanoid";
+import { MessageResponse } from "@/library/types";
+import { time } from "console";
 
 export default {
   name: "BaseGame",
-
   data() {
     return {
       app: new Application(),
+      connectionStatus: "Disconnected",
+      ping: 0,
+      username: "",
+      lastPingTime: 0,
     };
   },
   components: {
     ChatBox,
+    StatusBox,
   },
   async mounted() {
     await init(this);
+    this.connectWebsocket();
+  },
+  methods: {
+    connectWebsocket() {
+      const ws = new WebSocket(config.wsUrl + "ws");
+
+      const username = localStorage.getItem("username");
+      if (!username) {
+        const randomUsername = nanoid();
+        localStorage.setItem("username", randomUsername);
+        this.username = randomUsername;
+      }
+
+      ws.onopen = () => {
+        this.connectionStatus = "Connected";
+        // console.log("Logged in as", this.username);
+
+        setInterval(() => {
+          this.lastPingTime = Date.now();
+          const pingMessage = {
+            action: "ping",
+            data: "",
+            target: {
+              id: "general",
+              name: "general",
+            },
+            sender: {
+              id: this.username,
+              name: this.username,
+            },
+          };
+          ws.send(JSON.stringify(pingMessage));
+        }, 5000);
+      };
+
+      ws.onmessage = (event) => {
+        this.handleMessage(event.data);
+      };
+
+      ws.onclose = () => {
+        this.connectionStatus = "Disconnected";
+
+        setTimeout(() => {
+          this.connectWebsocket();
+        }, 3000);
+      };
+    },
+
+    handleMessage(data: string) {
+      try {
+        const message: MessageResponse = JSON.parse(data);
+
+        switch (message.action) {
+          case "pong":
+            this.ping = Date.now() - this.lastPingTime;
+            console.log("pong!", message.data);
+            break;
+          default:
+            // console.warn("Unimplemented action", message.Action);
+            console.log("unimplemented", message);
+            break;
+        }
+      } catch (error) {
+        console.error("Error parsing message", error);
+      }
+    },
   },
 };
 </script>
@@ -49,17 +131,30 @@ body {
 }
 
 .baseGame {
-  width: 1200px;
-  height: 650px;
+  background-color: #1199bb;
+  width: 100vw;
+  height: 100vh;
   position: relative;
 }
 
 .chat-box {
-  width: 21%;
   height: 40%;
   position: absolute;
-  bottom: 0; /* Move to the bottom of baseGame */
-  right: 0; /* Move to the right of baseGame */
+  bottom: 0;
+  right: 0;
   z-index: 10;
+}
+
+.status-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+}
+
+.prevent-select {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 </style>
