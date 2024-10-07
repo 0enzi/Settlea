@@ -1,7 +1,11 @@
 <template>
   <div class="container">
     <div class="baseGame prevent-select">
-      <ChatBox class="chat-box" />
+      <ChatBox
+        class="chat-box"
+        :messages="messages"
+        :send-message="sendMessage"
+      />
       <StatusBox
         class="status-box"
         :connection-status="connectionStatus"
@@ -21,7 +25,6 @@ import ChatBox from "./ChatBox.vue";
 import config from "@/config";
 import { nanoid } from "nanoid";
 import { MessageResponse } from "@/library/types";
-import { time } from "console";
 
 export default {
   name: "BaseGame",
@@ -32,6 +35,11 @@ export default {
       ping: 0,
       username: "",
       lastPingTime: 0,
+      wsConn: null as WebSocket | null,
+      messages: [] as {
+        author: string;
+        message: string;
+      }[],
     };
   },
   components: {
@@ -45,6 +53,7 @@ export default {
   methods: {
     connectWebsocket() {
       const ws = new WebSocket(config.wsUrl + "ws");
+      this.wsConn = ws;
 
       const username = localStorage.getItem("username");
       if (!username) {
@@ -57,22 +66,36 @@ export default {
         this.connectionStatus = "Connected";
         // console.log("Logged in as", this.username);
 
-        setInterval(() => {
-          this.lastPingTime = Date.now();
-          const pingMessage = {
-            action: "ping",
-            data: "",
-            target: {
-              id: "general",
-              name: "general",
-            },
-            sender: {
-              id: this.username,
-              name: this.username,
-            },
-          };
-          ws.send(JSON.stringify(pingMessage));
-        }, 5000);
+        const createRoomMessage = {
+          action: "create_room",
+          data: "testID",
+          target: {
+            id: "testID",
+            name: "testID",
+          },
+          sender: {
+            id: this.username,
+            name: this.username,
+          },
+        };
+        ws.send(JSON.stringify(createRoomMessage));
+
+        // setInterval(() => {
+        //   this.lastPingTime = Date.now();
+        //   const pingMessage = {
+        //     action: "ping",
+        //     data: "",
+        //     target: {
+        //       id: "general",
+        //       name: "general",
+        //     },
+        //     sender: {
+        //       id: this.username,
+        //       name: this.username,
+        //     },
+        //   };
+        //   ws.send(JSON.stringify(pingMessage));
+        // }, 5000);
       };
 
       ws.onmessage = (event) => {
@@ -87,16 +110,66 @@ export default {
         }, 3000);
       };
     },
+    sendMessage(message: string) {
+      if (this.wsConn && this.wsConn.readyState === WebSocket.OPEN) {
+        const chatMessage = {
+          action: "send_message",
+          data: message,
+          target: {
+            id: "testID",
+            name: "testID",
+          },
+          sender: {
+            id: this.username,
+            name: this.username,
+          },
+        };
+        this.wsConn.send(JSON.stringify(chatMessage));
+        console.log("Message sent:", message);
+      } else {
+        console.warn("WebSocket is not connected.");
+      }
+    },
 
     handleMessage(data: string) {
       try {
         const message: MessageResponse = JSON.parse(data);
+        const testRoom = {
+          id: "testID",
+          name: "testRoom",
+        };
+        let sendMessage;
 
         switch (message.action) {
           case "pong":
             this.ping = Date.now() - this.lastPingTime;
             console.log("pong!", message.data);
             break;
+          case "send_message":
+            console.log("Message received:", message.data);
+            this.messages.push({
+              author: message.sender.name,
+              message: message.data,
+            });
+            break;
+          case "create_room":
+            sendMessage = {
+              action: "join_room",
+              data: testRoom.id,
+              target: {
+                ID: "testID",
+                Name: "",
+              },
+              sender: {
+                id: this.username,
+                name: this.username,
+              },
+            };
+            if (this.wsConn) {
+              this.wsConn.send(JSON.stringify(sendMessage));
+            }
+            break;
+
           default:
             // console.warn("Unimplemented action", message.Action);
             console.log("unimplemented", message);

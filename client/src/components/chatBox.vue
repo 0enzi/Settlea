@@ -17,26 +17,23 @@
       </button>
     </nav>
 
-    <!-- Wrapper for content and input -->
     <div class="chat-wrapper">
-      <!-- Conditionally render based on the active tab -->
       <div v-if="activeTab === 'chat'" class="tab-content">
-        <TabChat />
+        <TabChat :messages="messages" />
       </div>
       <div v-else-if="activeTab === 'log'" class="tab-content">
         <TabLog />
       </div>
 
-      <!-- Chat input section appears only in the chat tab -->
       <div class="chat-input" v-if="activeTab === 'chat'">
         <input
           v-model="message"
-          @keydown.enter="sendMessage"
+          @keydown.enter="sendMessageToServer"
           type="text"
           placeholder="Type a message..."
           class="input-text"
         />
-        <button @click="sendMessage" class="send-button">
+        <button @click="sendMessageToServer" class="send-button">
           <i class="fa-solid fa-paper-plane"></i>
         </button>
       </div>
@@ -45,7 +42,7 @@
 </template>
 
 <script lang="ts">
-import { ref } from "vue";
+import { ref, PropType } from "vue";
 import TabChat from "./TabChat.vue";
 import TabLog from "./TabLog.vue";
 
@@ -55,22 +52,31 @@ export default {
     TabChat,
     TabLog,
   },
-  setup() {
-    const activeTab = ref("chat"); // 'chat' is the default tab
-    const message = ref(""); // Message input value
+  props: {
+    sendMessage: {
+      type: Function as PropType<(message: string) => void>,
+      required: true,
+    },
+    messages: {
+      type: Array as PropType<{ author: string; message: string }[]>,
+      required: true,
+    },
+  },
+  setup(props) {
+    const activeTab = ref("chat");
+    const message = ref("");
 
-    // Function to handle sending a message
-    const sendMessage = () => {
+    const sendMessageToServer = () => {
       if (message.value.trim()) {
-        console.log("Sending message:", message.value);
-        message.value = ""; // Clear the input after sending
+        props.sendMessage(message.value);
+        message.value = ""; // Clear input after sending
       }
     };
 
     return {
       activeTab,
       message,
-      sendMessage,
+      sendMessageToServer,
     };
   },
 };
