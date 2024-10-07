@@ -149,7 +149,7 @@ export async function generateMap(
       const tokenNumber = new PIXI.Text({
         text: hex.Token.toString(),
         style: {
-          fontFamily: "Bungee",
+          fontFamily: "Bungee, sans-serif",
           fontSize: 30,
           fill: hex.Token === 6 || hex.Token === 8 ? "#FF0000" : "#183A37",
         },
@@ -283,7 +283,7 @@ export function addPorts(
 ): void {
   const ratesText = new PIXI.Text({
     text: portData.exchangeRate.text,
-    style: { fontFamily: "Rubik" },
+    style: { fontFamily: "Rubik, Arial, sans-serif" },
   });
 
   ratesText.x = portData.exchangeRate.coord[0];

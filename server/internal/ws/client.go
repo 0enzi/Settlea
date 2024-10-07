@@ -41,7 +41,7 @@ var upgrader = websocket.Upgrader{
 	// allow from a list of domains
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		return origin == "http://127.0.0.1:5500"
+		return origin == "http://localhost:5173"
 	},
 }
 
